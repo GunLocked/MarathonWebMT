@@ -1,0 +1,137 @@
+Documentation des Données — Marathon du Weeb
+============================================
+
+Vue d'ensemble
+--------------
+Le projet analyse la distribution spatiotemporelle du moustique Aedes albopictus
+(moustique tigre) dans le département de l'Hérault (34), en croisant des données
+climatiques/biologiques avec des variables socio-environnementales.
+
+
+==============================================================================
+FICHIER PRINCIPAL : albopictus_climate_suitability_weekly.csv
+==============================================================================
+
+Dimensions : 49 392 lignes x 27 colonnes
+
+Table maître issue de la fusion des 4 sources.
+Chaque ligne = une commune (ou le département entier) x une semaine.
+
+Colonne                       Type     Description
+----------------------------------------------------------------------------------------------
+FID                           str      Identifiant unique de la feature géographique
+libgeo                        str      Libellé géographique (ex : "Hérault")
+dep                           int      Code département (34)
+level                         str      Granularité : "commune" ou "departement"
+codgeo                        str      Code INSEE commune (ou "34" pour le département)
+date                          str      Début de la semaine (YYYY-MM-DD)
+date_fin                      str      Fin de la semaine (YYYY-MM-DD)
+mean_temperature              float    Température moyenne (°C)
+mean_rainfall                 float    Précipitations moyennes (mm)
+mean_humidity                 float    Humidité relative moyenne (%)
+mean_abundance_albopictus     float    Abondance estimée du moustique tigre (moyenne)
+sd_abundance_albopictus       float    Ecart-type de l'abondance estimée
+status_pred                   str      Type de prédiction : "nowcasting" ou "forecasting"
+geometry                      str      Géométrie MULTIPOLYGON en projection L93
+P22_POP                       float    Population 2022
+P22_LOG                       float    Nombre total de logements 2022
+RES_PRINCIPALE                float    Résidences principales 2022
+RES_SECONDAIRES               float    Résidences secondaires et logements occasionnels 2022
+LOG_VACANTS                   float    Logements vacants 2022
+CAPACITE_EH                   float    Capacité totale des stations d'épuration (équivalents-habitants)
+DEBIT_NOMINAL                 float    Débit nominal cumulé des stations (m³/j)
+FILIERE                       str      Filière de traitement dominante des stations
+TEXTURE_DOMINANTE             str      Texture dominante du sol (mode par commune)
+RESERVE_UTILE                 str      Réserve utile du sol (mode par commune)
+PROFONDEUR                    str      Profondeur du sol (mode par commune)
+MEDIAN_PH                     float    pH médian moyen du sol
+PIERROSITE                    str      Pierrosité du sol (mode par commune)
+
+Couverture temporelle : 2023-01-07 -> 2025-10-04 (~143 semaines)
+Communes couvertes : 343 communes + 1 entrée département
+
+Taux de remplissage des colonnes enrichies :
+  Démographie / Logements (P22_POP, P22_LOG, etc.)           : ~99.4%
+  Stations d'épuration (CAPACITE_EH, DEBIT_NOMINAL, FILIERE) : ~80.5%
+  Propriétés du sol (TEXTURE_DOMINANTE, PROFONDEUR, etc.)    : ~73.2%
+
+
+==============================================================================
+SOURCES DE DONNÉES
+==============================================================================
+
+------------------------------------------------------------------------------
+1. logements-par-categorie-herault.csv
+------------------------------------------------------------------------------
+682 lignes x 61 colonnes — Source INSEE
+Séparateur : ;  |  Encodage : utf-8-sig
+
+Données démographiques et de logement par commune de l'Hérault.
+
+Colonnes clés utilisées :
+  - Code geographique  -> jointure sur codgeo
+  - P22_POP            -> Population municipale 2022
+  - P22_LOG            -> Nombre de logements 2022
+  - Résidence Principale
+  - Rés secondaires et logts occasionnels
+  - Log. Vacants
+
+Contient aussi les séries temporelles de population et logements depuis 1968.
+
+------------------------------------------------------------------------------
+2. stations-epuration-lherault.csv
+------------------------------------------------------------------------------
+391 lignes x 23 colonnes — Source eau/environnement
+Séparateur : ;  |  Encodage : utf-8-sig
+
+Inventaire des stations d'épuration de l'Hérault.
+Agrégation par commune : somme des capacités/débits, mode de la filière.
+
+Colonnes clés utilisées :
+  - CODE_INSEE    -> jointure sur codgeo
+  - CAPACITE_EH  -> Capacité en équivalents-habitants
+  - DEBIT_NOMINAL -> Débit nominal (m³/j)
+  - FILIERE       -> Procédé de traitement (13 valeurs possibles) :
+      filtres plantés, boues activées (faible/forte/moyenne/aération prolongée),
+      lagunage (naturel/aéré), lit bactérien, infiltration, disques biologiques,
+      décantation primaire, Sans objet.
+
+------------------------------------------------------------------------------
+3. bd-sol-proprietes-herault.csv
+------------------------------------------------------------------------------
+24 466 lignes x 26 colonnes — Base de données sol (BDAT/Chambre d'agriculture)
+Séparateur : ;  |  Encodage : utf-8-sig
+
+Propriétés agro-pédologiques des sols de l'Hérault au niveau parcellaire.
+Jointure réalisée via normalisation du nom de commune
+(suppression accents/tirets, mise en majuscules).
+
+Colonnes clés utilisées :
+  - commune          -> jointure normalisée sur libgeo
+  - Texture dominante -> Type de sol (sableux, argileux, limoneux...)
+  - Réserve utile    -> Capacité de rétention en eau
+  - Profondeur       -> Profondeur du sol
+  - Médiane pH       -> pH du sol
+  - Pierrosité       -> Teneur en pierres
+
+Un mapping manuel corrige 6 communes avec des orthographes divergentes :
+  AIGUES_VIVE              -> AIGUES_VIVES
+  LES__MATELLES            -> LES_MATELLES
+  NISSAN_LES_ENSERUNE      -> NISSAN_LEZ_ENSERUNE
+  SAINT_CHINIANS           -> SAINT_CHINIAN
+  SAINT_FELIX_DE_LOPEZ     -> SAINT_FELIX_DE_LODEZ
+  SAINT_GENIES_DE_MOURGUES -> SAINT_GENIES_DES_MOURGUES
+
+
+==============================================================================
+NOTES IMPORTANTES
+==============================================================================
+
+- Niveau département (codgeo = "34") : les colonnes de logements/stations/sol
+  sont NaN (pas de jointure possible à ce niveau).
+
+- Jointure sol : réalisée par nom de commune normalisé (accents et tirets
+  supprimés, mise en majuscules).
+
+- La colonne "geometry" contient des MULTIPOLYGON en projection Lambert-93
+  (EPSG:2154) — utile pour les visualisations cartographiques.
