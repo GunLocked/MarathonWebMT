@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMEES — Surveillance Aedes albopictus</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --text: #e2e8f0;
+    --text-muted: #64748b;
+    --danger: #ef4444;
+    --warn: #f97316;
+    --ok: #22c55e;
+    --font-mono: 'Space Mono', monospace;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    height: 100vh;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: 52px 1fr;
+    grid-template-columns: 320px 1fr 300px;
+  }
+
+  /* HEADER */
+  header {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 20px;
+  }
+
+  .logo {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .logo span { color: var(--text-muted); }
+
+  .header-info {
+    display: flex;
+    gap: 24px;
+    margin-left: auto;
+    align-items: center;
+  }
+
+  .stat-pill {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .stat-pill strong {
+    color: var(--accent);
+    font-size: 13px;
+  }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--ok);
+    box-shadow: 0 0 8px var(--ok);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* LEFT PANEL */
+  .panel-left {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  /* VARIABLE SELECTOR */
+  .var-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .var-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 11px;
+  }
+
+  .var-btn:hover { border-color: var(--accent); color: var(--text); }
+
+  .var-btn.active {
+    background: rgba(0, 212, 255, 0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .var-btn .icon { font-size: 18px; display: block; margin-bottom: 4px; }
+
+  /* TIME SLIDER */
+  .time-control {
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 14px;
+    border: 1px solid var(--border);
+  }
+
+  .time-display {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--accent);
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .time-display small {
+    display: block;
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  input[type=range] {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+    height: 4px;
+  }
+
+  .time-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    gap: 8px;
+  }
+
+  .btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    transition: all 0.2s;
+    flex: 1;
+    text-align: center;
+  }
+
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.play { background: rgba(0,212,255,0.15); border-color: var(--accent); color: var(--accent); }
+
+  /* LEGEND */
+  .legend-bar {
+    border-radius: 8px;
+    overflow: hidden;
+    height: 12px;
+    background: linear-gradient(to right, #ffffcc, #fecc5c, #fd8d3c, #f03b20, #bd0026);
+    margin-bottom: 6px;
+  }
+
+  .legend-labels {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  /* STATS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+
+  .stat-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+  }
+
+  .stat-card .val {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    color: var(--accent);
+    display: block;
+  }
+
+  .stat-card .lbl {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* MAP */
+  #map {
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+  }
+
+  /* RIGHT PANEL */
+  .panel-right {
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .commune-header {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+  }
+
+  .commune-name {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .commune-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .commune-stat {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .commune-stat strong {
+    color: var(--text);
+    font-size: 13px;
+    display: block;
+  }
+
+  .chart-container {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+  }
+
+  .chart-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.8;
+  }
+
+  .empty-state .big { font-size: 32px; margin-bottom: 10px; display: block; }
+
+  /* LOADING */
+  #loading {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .loader {
+    width: 40px; height: 40px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* LEAFLET OVERRIDES */
+  .leaflet-container { background: #0d1117 !important; }
+  .leaflet-tile { filter: brightness(0.7) saturate(0.5); }
+
+  .info-popup {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 10px !important;
+    color: var(--text) !important;
+    font-family: var(--font-body) !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+    padding: 12px !important;
+  }
+
+  .popup-title {
+    font-family: var(--font-mono);
+    color: var(--accent);
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+
+  .popup-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 3px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .popup-row:last-child { border: none; }
+  .popup-row strong { color: var(--text); }
+
+  .leaflet-popup-content-wrapper {
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .leaflet-popup-tip { background: var(--surface) !important; }
+  .leaflet-popup-content { margin: 0 !important; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="loader"></div>
+  <div class="loading-text">Chargement des données OMEES...</div>
+</div>
+
+<header>
+  <div class="logo">OMEES <span>//</span> Aedes albopictus</div>
+  <div class="header-info">
+    <div class="stat-pill">SEMAINES <strong id="total-weeks">—</strong></div>
+    <div class="stat-pill">COMMUNES <strong id="total-communes">—</strong></div>
+    <div class="stat-pill">DONNÉES <strong id="data-source">Local GeoJSON</strong></div>
+    <div class="status-dot"></div>
+  </div>
+</header>
+
+<!-- LEFT PANEL -->
+<div class="panel-left">
+
+  <div>
+    <div class="section-label">Variable affichée</div>
+    <div class="var-grid">
+      <button class="var-btn active" data-var="mean_abundance_albopictus" onclick="setVariable(this)">
+        <span class="icon">🦟</span>Abondance
+      </button>
+      <button class="var-btn" data-var="mean_temperature" onclick="setVariable(this)">
+        <span class="icon">🌡️</span>Température
+      </button>
+      <button class="var-btn" data-var="mean_rainfall" onclick="setVariable(this)">
+        <span class="icon">🌧️</span>Pluie
+      </button>
+      <button class="var-btn" data-var="mean_humidity" onclick="setVariable(this)">
+        <span class="icon">💧</span>Humidité
+      </button>
+    </div>
+  </div>
+
+  <div class="time-control">
+    <div class="section-label">Navigation temporelle</div>
+    <div class="time-display">
+      <span id="current-date">—</span>
+      <small id="week-info">— / —</small>
+    </div>
+    <input type="range" id="time-slider" min="0" value="0" step="1" oninput="onSliderChange(this.value)">
+    <div class="time-nav">
+      <button class="btn" onclick="prevWeek()">◀ Préc</button>
+      <button class="btn play" id="play-btn" onclick="togglePlay()">▶ Play</button>
+      <button class="btn" onclick="nextWeek()">Suiv ▶</button>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">Légende — <span id="legend-var-label">Abondance</span></div>
+    <div class="legend-bar" id="legend-bar"></div>
+    <div class="legend-labels">
+      <span id="leg-min">0</span>
+      <span id="leg-mid">—</span>
+      <span id="leg-max">max</span>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">Statistiques — semaine courante</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="val" id="stat-min">—</span>
+        <div class="lbl">Min</div>
+      </div>
+      <div class="stat-card">
+        <span class="val" id="stat-mean">—</span>
+        <div class="lbl">Moyenne</div>
+      </div>
+      <div class="stat-card">
+        <span class="val" id="stat-max">—</span>
+        <div class="lbl">Max</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MAP -->
+<div id="map"></div>
+
+<!-- RIGHT PANEL -->
+<div class="panel-right">
+  <div id="commune-panel">
+    <div class="empty-state">
+      <span class="big">🗺️</span>
+      Cliquez sur une commune pour voir ses données et tendances temporelles
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const GEOJSON_URL = 'data/mosquito_clean.geojson';
+
+const VARIABLES = {
+  mean_abundance_albopictus: {
+    label: 'Abondance moustique',
+    unit: 'ind/trap',
+    colors: ['#ffffcc','#fecc5c','#fd8d3c','#f03b20','#bd0026'],
+    breaks: [0, 2, 5, 10, 20],
+    gradient: 'linear-gradient(to right, #ffffcc, #fecc5c, #fd8d3c, #f03b20, #bd0026)'
+  },
+  mean_temperature: {
+    label: 'Température moyenne',
+    unit: '°C',
+    colors: ['#313695','#74add1','#ffffbf','#f46d43','#a50026'],
+    breaks: [0, 10, 15, 20, 30],
+    gradient: 'linear-gradient(to right, #313695, #74add1, #ffffbf, #f46d43, #a50026)'
+  },
+  mean_rainfall: {
+    label: 'Précipitations',
+    unit: 'mm',
+    colors: ['#f7fbff','#c6dbef','#6baed6','#2171b5','#08306b'],
+    breaks: [0, 10, 25, 50, 100],
+    gradient: 'linear-gradient(to right, #f7fbff, #c6dbef, #6baed6, #2171b5, #08306b)'
+  },
+  mean_humidity: {
+    label: 'Humidité relative',
+    unit: '%',
+    colors: ['#fff5eb','#fdd0a2','#fd8d3c','#d94801','#7f2704'],
+    breaks: [40, 55, 65, 75, 90],
+    gradient: 'linear-gradient(to right, #fff5eb, #fdd0a2, #fd8d3c, #d94801, #7f2704)'
+  }
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let allData = null;
+let weeks = [];
+let currentWeekIndex = 0;
+let currentVar = 'mean_abundance_albopictus';
+let geoLayer = null;
+let selectedCommune = null;
+let playInterval = null;
+let chartAbondance = null;
+let chartCorrelation = null;
+let map;
+
+// ============================================================
+// MAP INIT
+// ============================================================
+function initMap() {
+  map = L.map('map', {
+    center: [43.6, 3.8],
+    zoom: 9,
+    zoomControl: true,
+    preferCanvas: true
+  });
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© CartoDB',
+    subdomains: 'abcd',
+    maxZoom: 19
+  }).addTo(map);
+}
+
+// ============================================================
+// LOAD DATA
+// ============================================================
+async function loadData() {
+  try {
+    const resp = await fetch(GEOJSON_URL);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    allData = await resp.json();
+
+    // Extract unique weeks sorted
+    const dateSet = new Set();
+    allData.features.forEach(f => {
+      const d = f.properties.date;
+      if (d) dateSet.add(d.substring(0, 10));
+    });
+    weeks = Array.from(dateSet).sort();
+
+    // Update header
+    document.getElementById('total-weeks').textContent = weeks.length;
+    const communes = new Set(allData.features.map(f => f.properties.codgeo));
+    document.getElementById('total-communes').textContent = communes.size;
+
+    // Slider
+    const slider = document.getElementById('time-slider');
+    slider.max = weeks.length - 1;
+    slider.value = weeks.length - 1;
+    currentWeekIndex = weeks.length - 1;
+
+    document.getElementById('loading').style.display = 'none';
+    renderWeek();
+
+  } catch(e) {
+    document.querySelector('.loading-text').textContent = 
+      '⚠️ Impossible de charger ' + GEOJSON_URL + ' — vérifiez que le fichier existe dans mviewer-master/data/';
+    console.error(e);
+  }
+}
+
+// ============================================================
+// GET COLOR
+// ============================================================
+function getColor(value, varName) {
+  const cfg = VARIABLES[varName];
+  if (value === null || value === undefined || isNaN(value)) return '#1a2235';
+  for (let i = cfg.breaks.length - 1; i >= 0; i--) {
+    if (value >= cfg.breaks[i]) return cfg.colors[i];
+  }
+  return cfg.colors[0];
+}
+
+// ============================================================
+// RENDER WEEK
+// ============================================================
+function renderWeek() {
+  const week = weeks[currentWeekIndex];
+  document.getElementById('current-date').textContent = formatDate(week);
+  document.getElementById('week-info').textContent = `Semaine ${currentWeekIndex + 1} / ${weeks.length}`;
+  document.getElementById('time-slider').value = currentWeekIndex;
+
+  // Filter features for this week
+  const weekFeatures = allData.features.filter(f => {
+    const d = f.properties.date;
+    return d && d.substring(0, 10) === week;
+  });
+
+  // Compute stats
+  const vals = weekFeatures
+    .map(f => parseFloat(f.properties[currentVar]))
+    .filter(v => !isNaN(v));
+
+  if (vals.length > 0) {
+    const min = Math.min(...vals);
+    const max = Math.max(...vals);
+    const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+    document.getElementById('stat-min').textContent = min.toFixed(1);
+    document.getElementById('stat-mean').textContent = mean.toFixed(1);
+    document.getElementById('stat-max').textContent = max.toFixed(1);
+    document.getElementById('leg-min').textContent = VARIABLES[currentVar].breaks[0];
+    document.getElementById('leg-mid').textContent = VARIABLES[currentVar].breaks[2];
+    document.getElementById('leg-max').textContent = '>' + VARIABLES[currentVar].breaks[4];
+  }
+
+  // Remove old layer
+  if (geoLayer) map.removeLayer(geoLayer);
+
+  // Create GeoJSON layer
+  const weekGeoJSON = { type: 'FeatureCollection', features: weekFeatures };
+
+  geoLayer = L.geoJSON(weekGeoJSON, {
+    style: function(feature) {
+      const val = parseFloat(feature.properties[currentVar]);
+      return {
+        fillColor: getColor(val, currentVar),
+        weight: 0.5,
+        opacity: 0.8,
+        color: '#0a0e1a',
+        fillOpacity: val !== null && !isNaN(val) ? 0.75 : 0.2
+      };
+    },
+    onEachFeature: function(feature, layer) {
+      layer.on({
+        mouseover: function(e) {
+          const l = e.target;
+          l.setStyle({ weight: 2, color: '#00d4ff', fillOpacity: 0.9 });
+          showTooltip(feature, e.latlng);
+        },
+        mouseout: function(e) {
+          geoLayer.resetStyle(e.target);
+          map.closePopup();
+        },
+        click: function(e) {
+          selectCommune(feature.properties);
+        }
+      });
+    }
+  }).addTo(map);
+}
+
+// ============================================================
+// TOOLTIP
+// ============================================================
+function showTooltip(feature, latlng) {
+  const p = feature.properties;
+  const varCfg = VARIABLES[currentVar];
+  const val = parseFloat(p[currentVar]);
+  const valStr = isNaN(val) ? 'N/D' : val.toFixed(2) + ' ' + varCfg.unit;
+
+  const content = `
+    <div class="info-popup">
+      <div class="popup-title">${p.libgeo || p.nom || p.codgeo}</div>
+      <div class="popup-row"><span>${varCfg.label}</span><strong>${valStr}</strong></div>
+      <div class="popup-row"><span>Température</span><strong>${fmtVal(p.mean_temperature, '°C')}</strong></div>
+      <div class="popup-row"><span>Humidité</span><strong>${fmtVal(p.mean_humidity, '%')}</strong></div>
+      <div class="popup-row"><span>Pluie</span><strong>${fmtVal(p.mean_rainfall, 'mm')}</strong></div>
+      <div class="popup-row"><span>Code INSEE</span><strong>${p.codgeo}</strong></div>
+    </div>`;
+
+  L.popup({ closeButton: false, offset: [0, -5], maxWidth: 220 })
+    .setLatLng(latlng)
+    .setContent(content)
+    .openOn(map);
+}
+
+function fmtVal(v, unit) {
+  const f = parseFloat(v);
+  return isNaN(f) ? 'N/D' : f.toFixed(1) + ' ' + unit;
+}
+
+// ============================================================
+// SELECT COMMUNE → right panel
+// ============================================================
+function selectCommune(props) {
+  const codgeo = props.codgeo;
+  selectedCommune = codgeo;
+
+  // Get all data for this commune
+  const communeData = allData.features
+    .filter(f => f.properties.codgeo === codgeo)
+    .map(f => f.properties)
+    .sort((a, b) => a.date > b.date ? 1 : -1);
+
+  if (communeData.length === 0) return;
+
+  const latest = communeData[communeData.length - 1];
+
+  // Build panel
+  const panel = document.getElementById('commune-panel');
+  panel.innerHTML = `
+    <div class="commune-header">
+      <div class="commune-name">📍 ${latest.libgeo || latest.codgeo}</div>
+      <div style="font-size:11px; color:var(--text-muted)">Dept. ${latest.dep} · ${communeData.length} semaines</div>
+      <div class="commune-stats">
+        <div class="commune-stat">
+          <strong>${fmtVal(latest.mean_abundance_albopictus, '')}</strong>Abondance actuelle
+        </div>
+        <div class="commune-stat">
+          <strong>${fmtVal(latest.mean_temperature, '°C')}</strong>Température
+        </div>
+        <div class="commune-stat">
+          <strong>${fmtVal(latest.mean_humidity, '%')}</strong>Humidité
+        </div>
+        <div class="commune-stat">
+          <strong>${fmtVal(latest.mean_rainfall, 'mm')}</strong>Précipitations
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-title">🦟 Tendance abondance</div>
+      <canvas id="chart-abondance" height="130"></canvas>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-title">🌡️ Température & Humidité</div>
+      <canvas id="chart-meteo" height="130"></canvas>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-title">🌧️ Précipitations</div>
+      <canvas id="chart-rain" height="100"></canvas>
+    </div>
+  `;
+
+  const labels = communeData.map(d => formatDateShort(d.date));
+  const abondance = communeData.map(d => parseFloat(d.mean_abundance_albopictus) || null);
+  const temp = communeData.map(d => parseFloat(d.mean_temperature) || null);
+  const humidity = communeData.map(d => parseFloat(d.mean_humidity) || null);
+  const rain = communeData.map(d => parseFloat(d.mean_rainfall) || null);
+
+  const chartDefaults = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: {
+        ticks: { color: '#64748b', font: { size: 9 }, maxTicksLimit: 8 },
+        grid: { color: '#1e2d45' }
+      },
+      y: {
+        ticks: { color: '#64748b', font: { size: 9 } },
+        grid: { color: '#1e2d45' }
+      }
+    }
+  };
+
+  // Chart abondance
+  new Chart(document.getElementById('chart-abondance'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: abondance,
+        borderColor: '#00d4ff',
+        backgroundColor: 'rgba(0,212,255,0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 2,
+        borderWidth: 2
+      }]
+    },
+    options: { ...chartDefaults }
+  });
+
+  // Chart meteo
+  new Chart(document.getElementById('chart-meteo'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          data: temp,
+          borderColor: '#f97316',
+          backgroundColor: 'transparent',
+          tension: 0.4,
+          pointRadius: 1,
+          borderWidth: 1.5,
+          label: 'Temp'
+        },
+        {
+          data: humidity,
+          borderColor: '#6366f1',
+          backgroundColor: 'transparent',
+          tension: 0.4,
+          pointRadius: 1,
+          borderWidth: 1.5,
+          yAxisID: 'y2',
+          label: 'Humidité'
+        }
+      ]
+    },
+    options: {
+      ...chartDefaults,
+      plugins: {
+        legend: {
+          display: true,
+          labels: { color: '#64748b', font: { size: 9 }, boxWidth: 12 }
+        }
+      },
+      scales: {
+        ...chartDefaults.scales,
+        y2: {
+          position: 'right',
+          ticks: { color: '#6366f1', font: { size: 9 } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+
+  // Chart rain
+  new Chart(document.getElementById('chart-rain'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: rain,
+        backgroundColor: 'rgba(99,102,241,0.6)',
+        borderColor: '#6366f1',
+        borderWidth: 1
+      }]
+    },
+    options: { ...chartDefaults }
+  });
+}
+
+// ============================================================
+// CONTROLS
+// ============================================================
+function setVariable(btn) {
+  document.querySelectorAll('.var-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentVar = btn.dataset.var;
+  const cfg = VARIABLES[currentVar];
+  document.getElementById('legend-var-label').textContent = cfg.label;
+  document.getElementById('legend-bar').style.background = cfg.gradient;
+  renderWeek();
+}
+
+function onSliderChange(val) {
+  currentWeekIndex = parseInt(val);
+  renderWeek();
+}
+
+function prevWeek() {
+  if (currentWeekIndex > 0) {
+    currentWeekIndex--;
+    renderWeek();
+  }
+}
+
+function nextWeek() {
+  if (currentWeekIndex < weeks.length - 1) {
+    currentWeekIndex++;
+    renderWeek();
+  }
+}
+
+function togglePlay() {
+  const btn = document.getElementById('play-btn');
+  if (playInterval) {
+    clearInterval(playInterval);
+    playInterval = null;
+    btn.textContent = '▶ Play';
+    btn.classList.remove('play');
+  } else {
+    btn.textContent = '⏸ Pause';
+    btn.classList.add('play');
+    playInterval = setInterval(() => {
+      if (currentWeekIndex < weeks.length - 1) {
+        currentWeekIndex++;
+        renderWeek();
+      } else {
+        clearInterval(playInterval);
+        playInterval = null;
+        btn.textContent = '▶ Play';
+      }
+    }, 600);
+  }
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function formatDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function formatDateShort(d) {
+  if (!d) return '';
+  return d ? d.substring(5) : '';
+}
+
+// ============================================================
+// INIT
+// ============================================================
+initMap();
+loadData();
+</script>
+</body>
+</html>

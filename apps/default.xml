@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+  <application title="OMEES - Moustique Tigre" mouseposition="false" logo="" measuretools="true" mapprint="true" exportpng="true" togglealllayersfromtheme="true"/>
+  <mapoptions maxzoom="19" projection="EPSG:3857" center="431560,5460000" zoom="10" projextent="-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244"/>
+  <baselayers style="gallery">
+    <baselayer type="WMS" id="osm" label="OpenStreetMap" title="OSM" thumbgallery="img/basemap/osm.png" url="https://tile.geobretagne.fr/osm/service" layers="osm:grey" format="image/png" visible="true" attribution="OpenStreetMap"/>
+    <baselayer type="WMTS" id="ortho" label="Photo aerienne IGN" title="GeoPortail" maxscale="1000" thumbgallery="img/basemap/ortho.jpg" url="https://data.geopf.fr/wmts" layers="ORTHOIMAGERY.ORTHOPHOTOS" format="image/jpeg" visible="false" fromcapacity="false" attribution="IGN" style="normal" matrixset="PM" maxzoom="22"/>
+  </baselayers>
+  <proxy url="proxy.php?url="/>
+  <olscompletion url="https://data.geopf.fr/geocodage/search" type="search" attribution="IGN - BAN"/>
+  <searchparameters bbox="false" localities="true" features="false"/>
+  <themes>
+    <theme name="Donnees locales" collapsed="false" id="local" icon="fas fa-database">
+      <layer id="mosquito_geojson"
+        name="Aptitude climatique - donnees locales"
+        visible="true"
+        type="geojson"
+        url="data/mosquito_clean.geojson"
+        opacity="0.8"
+        queryable="true"
+        fields="mean_temperature,mean_rainfall,mean_humidity,mean_abundance_albopictus"
+        aliases="Temperature,Pluie,Humidite,Abondance moustique"
+        attribution="INRAE - OMEES"/>
+    </theme>
+
+    <theme name="Modeles de Prediction" collapsed="false" id="prediction" icon="fas fa-chart-line">
+      <layer id="albo_herault" name="Aptitude climatique - Herault" visible="true" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="albopictus_climate_suitability_isobands_herault" format="image/png" opacity="0.8" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="INRAE - OMEES"/>
+      <layer id="albo_suitability_weekly" name="Aptitude climatique hebdomadaire France" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="albopictus_climate_suitability_weekly" format="image/png" opacity="0.8" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="INRAE - OMEES"/>
+      <layer id="albo_suitability_isobands" name="Aptitude climatique isobandes France" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="albopictus_climate_suitability_isobands" format="image/png" opacity="0.8" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="INRAE - OMEES"/>
+      <layer id="albo_arbocarto" name="Densite adultes hebdomadaire Montpellier" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="albopictus_arbocarto_montpellier_weekly" format="image/png" opacity="0.8" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="INRAE - OMEES"/>
+      <layer id="albo_r0" name="Taux R0 hebdomadaire France" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="albopictus_arbocarto_r0_weekly" format="image/png" opacity="0.8" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="INRAE - OMEES"/>
+      <layer id="albo_climatechange" name="Predictions changement climatique" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="albopictus_predictions_climatechange" format="image/png" opacity="0.8" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="INRAE - OMEES"/>
+      <layer id="albo_globalchanges" name="Predictions changements globaux" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="albopictus_predictions_globalchanges_geo" format="image/png" opacity="0.8" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="INRAE - OMEES"/>
+    </theme>
+
+    <theme name="Surveillance" collapsed="true" id="surveillance" icon="fas fa-binoculars">
+      <layer id="albo_colonisation" name="Colonisation France" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="albopictus_france_colonisation_geo" format="image/png" opacity="0.9" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="INRAE - OMEES"/>
+      <layer id="albo_traps" name="Pieges de surveillance terrain" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="albopictus_field_surveillance_traps_geo" format="image/png" opacity="0.9" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="INRAE - OMEES"/>
+      <layer id="albo_traps_silav" name="Pieges SILAV" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="albopictus_field_surveillance_traps_geo_silav" format="image/png" opacity="0.9" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="INRAE - OMEES"/>
+      <layer id="albo_spf" name="Surveillance arboviroses SPF" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="albopictus_spf_surveillance_arboviroses_geo" format="image/png" opacity="0.9" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="INRAE - OMEES"/>
+      <layer id="acteurs" name="Acteurs OMEES" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="acteurs_omees" format="image/png" opacity="0.9" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="INRAE - OMEES"/>
+      <layer id="projets" name="Projets OMEES" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="projets_omees" format="image/png" opacity="0.9" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="INRAE - OMEES"/>
+    </theme>
+
+    <theme name="Zone Malbosc" collapsed="true" id="malbosc" icon="fas fa-map-marker-alt">
+      <layer id="malbosc_zone" name="Limites Malbosc" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="malbosc" format="image/png" opacity="0.9" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="INRAE - OMEES"/>
+      <layer id="zone_suivie_layer" name="Zone suivie" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="zone_suivie" format="image/png" opacity="0.9" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="INRAE - OMEES"/>
+      <layer id="zone_protegee_layer" name="Zone protegee" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="zone_protegee" format="image/png" opacity="0.9" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="INRAE - OMEES"/>
+      <layer id="zone_lacher_layer" name="Zone de lacher" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="zone_lacher_polygone" format="image/png" opacity="0.9" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="INRAE - OMEES"/>
+      <layer id="points_lacher_layer" name="Points de lacher" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="points_lacher" format="image/png" opacity="0.9" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="INRAE - OMEES"/>
+      <layer id="malbopictis_hex" name="Hexagones de suivi 2ha" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="malbopictis_hexagones_suivi_2ha" format="image/png" opacity="0.9" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="INRAE - OMEES"/>
+      <layer id="malbopictis_parcelles" name="Parcelles info" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="malbopictis_parcelles_info" format="image/png" opacity="0.9" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="INRAE - OMEES"/>
+      <layer id="malbopictis_rings" name="Anneaux 150m" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="malbopictis_rings_150m" format="image/png" opacity="0.9" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="INRAE - OMEES"/>
+    </theme>
+
+    <theme name="Donnees urbaines Montpellier" collapsed="true" id="urbain" icon="fas fa-city">
+      <layer id="cours_eau" name="Cours d eau" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="MMM_MMM_CoursEau" format="image/png" opacity="0.9" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="Montpellier Metropole"/>
+      <layer id="pop_fine" name="Distribution de la population" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="MMM_MMM_PopFine" format="image/png" opacity="0.8" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="Montpellier Metropole"/>
+      <layer id="veg_fine" name="Vegetation fine 2019" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="MMM_MMM_VegFine" format="image/png" opacity="0.8" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="Montpellier Metropole"/>
+      <layer id="lcz" name="Zones climatiques locales LCZ" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="MOS_CLIMAT_M3M_LCZ" format="image/png" opacity="0.8" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="Montpellier Metropole"/>
+      <layer id="parcs" name="Parcs et jardins" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="OSM_Metropole_parc_et_jardin" format="image/png" opacity="0.8" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="OpenStreetMap"/>
+      <layer id="eclairage" name="Pollution lumineuse" visible="false" tiled="false" queryable="true" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="indicateur_global_maille_50m_L93" format="image/png" opacity="0.8" infoformat="application/vnd.ogc.gml" featurecount="5" attribution="La Telescop"/>
+    </theme>
+
+    <theme name="Donnees Raster" collapsed="true" id="raster" icon="fas fa-layer-group">
+      <layer id="omees_geotiff_layer" name="GeoTIFF OMEES" visible="false" tiled="false" queryable="false" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="omees_geotiff" format="image/png" opacity="0.8" attribution="INRAE - OMEES"/>
+      <layer id="veg_3m" name="Vegetation 3m Montpellier" visible="false" tiled="false" queryable="false" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="vegetation_3m_raster" format="image/png" opacity="0.8" attribution="INRAE - OMEES"/>
+      <layer id="veg_lyon" name="Vegetation Grand Lyon" visible="false" tiled="false" queryable="false" url="https://geodata.bac-a-sable.inrae.fr/geoserver/omees/ows" layers="vegetation_GrandLyon" format="image/png" opacity="0.8" attribution="INRAE - OMEES"/>
+    </theme>
+
+  </themes>
+</config>
