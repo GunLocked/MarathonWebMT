@@ -12,7 +12,7 @@
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6f8; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-
+ 
 /* HEADER */
 header {
   background: #1a5490;
@@ -46,13 +46,13 @@ header {
 }
 .hbtn:hover { background: rgba(255,255,255,0.28); }
 .hbtn.active { background: #fff; color: #1a5490; font-weight: 600; }
-
+ 
 /* MAIN LAYOUT */
 #main { flex: 1; position: relative; overflow: hidden; display: flex; }
-
+ 
 /* MAP */
 #map { flex: 1; z-index: 1; }
-
+ 
 /* LEGEND */
 #legend {
   position: absolute; bottom: 12px; right: 12px; z-index: 500;
@@ -68,7 +68,28 @@ header {
 .legend-dot.faible  { background: #4caf50; }
 .legend-dot.modere  { background: #ff9800; }
 .legend-dot.eleve   { background: #e53935; }
-
+ 
+/* TIME NAV WIDGET */
+#time-nav-widget {
+  position: absolute; top: 60px; left: 12px; z-index: 500;
+  background: #fff; border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.2);
+  padding: 10px 14px; min-width: 210px;
+  font-size: 12px;
+}
+.tn-label { font-size: 9px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.tn-date-display { font-size: 13px; color: #1a5490; text-align: center; font-weight: 600; margin-bottom: 2px; }
+.tn-week-info { font-size: 9px; color: #aaa; text-align: center; margin-bottom: 8px; }
+#tn-slider { width: 100%; accent-color: #1a5490; cursor: pointer; height: 4px; margin-bottom: 8px; display: block; }
+.tn-nav { display: flex; gap: 6px; }
+.tn-nav .tnbtn {
+  background: #f5f7fa; border: 1px solid #ddd; color: #555;
+  border-radius: 6px; padding: 4px 0; font-size: 11px;
+  cursor: pointer; flex: 1; text-align: center; transition: all .15s;
+}
+.tn-nav .tnbtn:hover { border-color: #1a5490; color: #1a5490; }
+.tn-nav .tnbtn.active { background: #1a5490; border-color: #1a5490; color: #fff; }
+ 
 /* BOTTOM BAR (citoyen) */
 #bottom-bar {
   position: absolute; bottom: 52px; left: 50%; transform: translateX(-50%);
@@ -82,7 +103,7 @@ header {
   background: #1a5490; color: #fff; border: none; border-radius: 6px;
   padding: 5px 12px; font-size: 12px; cursor: pointer;
 }
-
+ 
 #bottom-actions {
   position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
   z-index: 500; display: flex; gap: 10px;
@@ -93,7 +114,7 @@ header {
 }
 #btn-comprendre { background: #1a5490; color: #fff; }
 #btn-quefaire   { background: #4a7c3f; color: #fff; }
-
+ 
 /* PANEL ÉLU */
 #panel-elu {
   position: absolute; top: 0; right: 0; bottom: 0; z-index: 500;
@@ -101,7 +122,7 @@ header {
   box-shadow: -3px 0 12px rgba(0,0,0,.15); width: 300px;
   font-size: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
 }
-
+ 
 /* KPIs élus */
 .elu-kpis { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
 .elu-kpi { background: #f5f7fa; border-radius: 7px; padding: 8px 6px; text-align: center; border-top: 3px solid #1a5490; }
@@ -109,7 +130,7 @@ header {
 .elu-kpi.red    { border-color: #e53935; }
 .elu-kpi-val { font-size: 18px; font-weight: 700; color: #1e293b; }
 .elu-kpi-lbl { font-size: 9px; color: #888; margin-top: 2px; }
-
+ 
 /* Tabs élus */
 .elu-tabs { display: flex; gap: 4px; }
 .elu-tab {
@@ -119,21 +140,21 @@ header {
 }
 .elu-tab:hover { border-color: #1a5490; color: #1a5490; }
 .elu-tab.active { background: #1a5490; color: #fff; border-color: #1a5490; }
-
+ 
 /* Tab panes */
 .elu-pane { display: none; flex-direction: column; gap: 10px; }
 .elu-pane.active { display: flex; }
-
+ 
 /* Chart titles */
 .elu-chart-title {
   font-size: 10px; font-weight: 700; color: #475569;
   text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px;
 }
-
+ 
 /* chart-wrap for fixed height charts */
 .chart-wrap { position: relative; }
 .chart-wrap canvas { position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important; }
-
+ 
 /* Rank list */
 .elu-rank-row {
   display: flex; align-items: center; gap: 6px; padding: 5px 6px;
@@ -145,7 +166,7 @@ header {
 .elu-rank-bar-wrap { width: 50px; height: 4px; background: #e2e8f0; border-radius: 2px; overflow: hidden; }
 .elu-rank-bar { height: 100%; border-radius: 2px; }
 .elu-rank-val { font-weight: 700; color: #1e293b; width: 36px; text-align: right; }
-
+ 
 /* Alert items */
 .elu-alert {
   display: flex; align-items: flex-start; gap: 8px;
@@ -156,7 +177,7 @@ header {
 .elu-alert-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 2px; }
 .elu-alert.high .elu-alert-dot { background: #e53935; }
 .elu-alert.med  .elu-alert-dot { background: #ff9800; }
-
+ 
 /* LOADING OVERLAY */
 #loading {
   position: absolute; inset: 0; z-index: 2000;
@@ -178,7 +199,7 @@ header {
   background: #1a5490; color: #fff; border: none; border-radius: 6px;
   padding: 7px 18px; cursor: pointer; font-size: 12px; margin-top: 6px;
 }
-
+ 
 /* MODAL BACKDROP */
 .modal-backdrop {
   position: fixed; inset: 0; z-index: 3000;
@@ -195,7 +216,7 @@ header {
   font-size: 16px; color: #1a5490; margin-bottom: 14px;
   text-align: center; padding-bottom: 10px; border-bottom: 2px solid #e8eef5;
 }
-
+ 
 /* FICHE COMMUNE */
 .mc-row {
   display: flex; align-items: center; gap: 10px;
@@ -228,7 +249,7 @@ header {
   padding: 9px; font-size: 13px; cursor: pointer; font-weight: 600;
 }
 .modal-close-btn.grey { background: #e0e0e0; color: #333; }
-
+ 
 /* COMPRENDRE LE RISQUE */
 .risk-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 16px; }
 .risk-col { border-radius: 8px; padding: 12px 10px; text-align: center; }
@@ -241,7 +262,7 @@ header {
 .risk-asavoir h4 { font-size: 12px; color: #555; margin-bottom: 8px; }
 .risk-asavoir li { font-size: 12px; color: #444; margin-bottom: 4px; list-style: none; padding-left: 14px; position: relative; }
 .risk-asavoir li::before { content: '●'; position: absolute; left: 0; font-size: 8px; top: 5px; color: #4caf50; }
-
+ 
 /* QUE FAIRE MODAL */
 .advice-level { border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
 .advice-level h4 { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
@@ -251,7 +272,7 @@ header {
 .advice-level.faible { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #4caf50; }
 .advice-level.modere { background: #fff3e0; color: #e65100; border-left: 4px solid #ff9800; }
 .advice-level.eleve  { background: #ffebee; color: #b71c1c; border-left: 4px solid #e53935; }
-
+ 
 /* MODE ÉLU extras */
 #export-btn {
   position: absolute; top: 62px; right: 12px; z-index: 500;
@@ -260,9 +281,9 @@ header {
   box-shadow: 0 2px 6px rgba(0,0,0,.12); display: none; align-items: center; gap: 6px;
 }
 #export-btn:hover { background: #f5f5f5; }
-
+ 
 .hidden { display: none !important; }
-
+ 
 /* ── SEARCH WIDGET ─────────────────────────────────────── */
 #search-widget {
   position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
@@ -277,6 +298,13 @@ header {
   font-size: 12px; font-weight: 700; color: #1a5490;
   display: flex; align-items: center; gap: 6px;
 }
+#sw-toggle-btn {
+  margin-left: auto; background: none; border: none; cursor: pointer;
+  color: #aaa; font-size: 16px; line-height: 1; padding: 0 2px;
+  transition: color .15s;
+}
+#sw-toggle-btn:hover { color: #e53935; }
+#sw-body.collapsed { display: none; }
 .sw-input-wrap { padding: 8px 10px; position: relative; }
 #sw-input {
   width: 100%; border: 1px solid #dde3ea; border-radius: 7px;
@@ -296,7 +324,7 @@ header {
 .sw-suggestion:last-child { border-bottom: none; }
 .sw-suggestion:hover, .sw-suggestion.focused { background: #eef4fb; color: #1a5490; }
 .sw-suggestion b { color: #1a5490; }
-
+ 
 /* result card */
 #sw-result {
   padding: 10px 14px 12px;
@@ -321,10 +349,89 @@ header {
   padding: 7px; font-size: 12px; font-weight: 600; cursor: pointer;
 }
 .sw-btn:hover { background: #16437a; }
+ 
+/* ── MODAL BIENVENIDA ─────────────────────────────────────────────────────── */
+#modal-welcome{
+  position:fixed;inset:0;z-index:4000;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.5);
+  transition: background .35s;
+}
+#modal-welcome.hidden{display:none}
+#modal-welcome.minimizing { background: rgba(0,0,0,0); pointer-events:none; }
+ 
+#welcome-box{
+  background:#fff;
+  border-radius:16px;
+  width:94%;
+  max-width:560px;
+  max-height:92vh;
+  overflow-y:auto;
+  position:relative;
+  box-shadow:0 12px 50px rgba(0,0,0,.32);
+  transform-origin: bottom left;
+  transition: transform .45s cubic-bezier(.4,0,.2,1), opacity .45s, border-radius .45s;
+}
+#welcome-box.minimizing {
+  transform: translate(calc(-50vw + 38px), calc(50vh - 38px)) scale(0.07);
+  opacity: 0;
+  border-radius: 50%;
+}
+ 
+#welcome-close{
+  position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:50%;
+  background:rgba(26,58,92,0.82);color:#fff;border:2px solid rgba(255,255,255,0.5);
+  font-size:15px;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;
+  backdrop-filter: blur(4px);
+  transition: background .15s;
+}
+#welcome-close:hover{background:#e53935}
+ 
+/* Bubble flottante coin bas-gauche */
+#welcome-bubble {
+  position:fixed;bottom:20px;left:20px;z-index:4000;
+  width:70px;height:70px;border-radius:50%;
+  background:#fff;
+  color:#fff;font-size:24px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  box-shadow:0 4px 18px rgba(0,0,0,.35);
+  border:3px solid #1a3a5c;
+  transform: scale(0);
+  opacity: 0;
+  transition: transform .4s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+}
+#welcome-bubble.visible {
+  transform: scale(1);
+  opacity: 1;
+}
+#welcome-bubble:hover { transform: scale(1.12); background:#16437a; }
+ 
+.wc-title{
+  background:#1a3a5c;color:#fff;text-align:center;font-size:16px;font-weight:800;
+  padding:16px 50px 16px 20px;border-radius:16px 16px 0 0;letter-spacing:.5px;text-transform:uppercase
+}
+.wc-section-bg {
+  background:#fff;
+  padding: 6px 0 10px;
+}
+.wc-accordion{background:#fff;margin:8px 14px;border-radius:10px;border:2px solid #1a3a5c;overflow:hidden}
+.wc-accordion:last-child{margin-bottom:14px}
+.wc-acc-header{display:flex;justify-content:space-between;align-items:center;padding:13px 18px;cursor:pointer;user-select:none;font-size:15px;font-weight:800;color:#1a3a5c;text-transform:uppercase}
+.wc-acc-icon{font-size:22px;font-weight:300;color:#1a3a5c;line-height:1}
+.wc-acc-body{display:none;padding:12px 18px 16px;border-top:1px solid #e0e0e0}
+.wc-acc-body.open{display:block}
+.wc-acc-body a{color:#1a5490;word-break:break-all;font-size:13px}
+.wc-acc-item{margin-bottom:14px}
+.wc-acc-item:last-child{margin-bottom:0}
+.wc-acc-item-title{font-size:13px;font-weight:700;color:#1a3a5c;text-decoration:underline;margin-bottom:6px;font-style:italic}
+.wc-yt-thumb{display:block;width:100%;max-width:300px;margin:8px auto;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid #e0e0e0}
+.wc-yt-thumb img{width:100%;display:block}
+ 
 </style>
 </head>
 <body>
-
+ 
 <header>
   <div class="header-logo">
     <svg viewBox="0 0 24 24" fill="none" stroke="#1a5490" stroke-width="1.8">
@@ -337,38 +444,56 @@ header {
   <div class="header-title">Moustique Tigre : <span>Alerte et Surveillance</span></div>
   <div class="header-btns">
     <button class="hbtn" id="btn-hinfos" onclick="openModal('modal-risk')">ℹ Infos</button>
-    <button class="hbtn" id="btn-hmode" onclick="toggleMode()">🔒 Citoyen</button>
-    <button class="hbtn hidden" id="btn-hexport" onclick="exportCSV()">📤 Exporter</button>
+    <button class="hbtn" id="btn-risk-view" onclick="cycleRiskView()">🔬 Vue: Brute</button>
     <a class="hbtn" href="mosquito_dashboard_regional.html">Dashboard élu</a>
   </div>
 </header>
-
+ 
 <div id="main">
   <div id="map"></div>
-
+ 
+  <!-- Navigation temporelle -->
+  <div id="time-nav-widget">
+    <div class="tn-label">Navigation temporelle</div>
+    <div class="tn-date-display" id="tn-current-date">—</div>
+    <div class="tn-week-info" id="tn-week-info">— / —</div>
+    <input type="range" id="tn-slider" min="0" value="0" step="1" oninput="onSlider(this.value)">
+    <div class="tn-nav">
+      <button class="tnbtn" onclick="prevWeek()">◀ Préc</button>
+      <button class="tnbtn active" id="play-btn" onclick="togglePlay()">▶ Play</button>
+      <button class="tnbtn" onclick="nextWeek()">Suiv ▶</button>
+    </div>
+  </div>
+ 
   <!-- Widget de recherche commune -->
   <div id="search-widget">
-    <div class="sw-header">🔍 Rechercher votre commune</div>
-    <div class="sw-input-wrap">
-      <input type="text" id="sw-input" placeholder="Ex : Montpellier, Lattes..." autocomplete="off"
-             oninput="swOnInput(this.value)" onkeydown="swOnKey(event)">
-      <div id="sw-suggestions"></div>
+    <div class="sw-header">
+      🔍 Rechercher votre commune
+      <button id="sw-toggle-btn" onclick="swToggle()" title="Réduire / Agrandir">×</button>
     </div>
-    <div id="sw-result" class="hidden">
-      <div class="sw-result-name" id="sw-rname"></div>
-      <div class="sw-kpis" id="sw-rkpis"></div>
-      <div class="sw-trend" id="sw-rtrend"></div>
-      <button class="sw-btn" id="sw-rbtn">Voir la fiche détaillée</button>
+    <div id="sw-body">
+      <div class="sw-input-wrap">
+        <input type="text" id="sw-input" placeholder="Ex : Montpellier, Lattes..." autocomplete="off"
+               oninput="swOnInput(this.value)" onkeydown="swOnKey(event)">
+        <div id="sw-suggestions"></div>
+      </div>
+      <div id="sw-result" class="hidden">
+        <div class="sw-result-name" id="sw-rname"></div>
+        <div class="sw-kpis" id="sw-rkpis"></div>
+        <div class="sw-trend" id="sw-rtrend"></div>
+        <button class="sw-btn" id="sw-rbtn">Voir la fiche détaillée</button>
+      </div>
     </div>
   </div>
-
+ 
   <!-- Légende -->
   <div id="legend">
-    <div class="legend-item"><span class="legend-dot faible"></span> Faible</div>
-    <div class="legend-item"><span class="legend-dot modere"></span> Modéré</div>
-    <div class="legend-item"><span class="legend-dot eleve"></span> Élevé</div>
+    <div id="legend-title" style="font-size:10px;color:#888;margin-bottom:6px;font-weight:600;">Abondance brute</div>
+    <div class="legend-item"><span class="legend-dot faible"></span> <span id="leg-faible">Faible (&lt;3)</span></div>
+    <div class="legend-item"><span class="legend-dot modere"></span> <span id="leg-modere">Modéré (3–10)</span></div>
+    <div class="legend-item"><span class="legend-dot eleve"></span> <span id="leg-eleve">Élevé (≥10)</span></div>
   </div>
-
+ 
   <!-- Barre inférieure mode citoyen -->
   <div id="bottom-bar">
     <span id="bottom-risk-dot"></span>
@@ -379,13 +504,13 @@ header {
     <button id="btn-comprendre" onclick="openModal('modal-risk')">Comprendre la carte</button>
     <button id="btn-quefaire" onclick="openModal('modal-advice')">Que puis-je faire ?</button>
   </div>
-
+ 
   <!-- Panel mode élu -->
   <div id="panel-elu" class="hidden">
     <div style="font-size:13px;font-weight:700;color:#1a5490;margin-bottom:4px;border-bottom:2px solid #e8eef5;padding-bottom:8px">
       Tableau de bord élu — Hérault
     </div>
-
+ 
     <!-- KPIs -->
     <div class="elu-kpis">
       <div class="elu-kpi">
@@ -401,14 +526,14 @@ header {
         <div class="elu-kpi-lbl">Moy. Hérault</div>
       </div>
     </div>
-
+ 
     <!-- Tabs -->
     <div class="elu-tabs">
       <button class="elu-tab active" onclick="switchEluTab('tendances', this)">Tendances</button>
       <button class="elu-tab" onclick="switchEluTab('classement', this)">Classement</button>
       <button class="elu-tab" onclick="switchEluTab('alertes', this)">Alertes</button>
     </div>
-
+ 
     <!-- Tab : Tendances -->
     <div class="elu-pane active" id="elu-pane-tendances">
       <div>
@@ -420,7 +545,7 @@ header {
         <div class="chart-wrap" style="height:110px"><canvas id="chart-elu-stack"></canvas></div>
       </div>
     </div>
-
+ 
     <!-- Tab : Classement -->
     <div class="elu-pane" id="elu-pane-classement">
       <div>
@@ -428,21 +553,21 @@ header {
         <div class="chart-wrap" style="height:200px"><canvas id="chart-elu-rank"></canvas></div>
       </div>
     </div>
-
+ 
     <!-- Tab : Alertes -->
     <div class="elu-pane" id="elu-pane-alertes">
       <div class="elu-chart-title">Communes en alerte — semaine actuelle</div>
       <div id="elu-alert-list" style="display:flex;flex-direction:column;gap:5px"></div>
     </div>
   </div>
-
+ 
   <!-- Chargement -->
   <div id="loading">
     <div class="loader"></div>
     <div class="loading-text" id="loading-text">Chargement des données...</div>
   </div>
 </div>
-
+ 
 <!-- MODAL : Fiche Commune -->
 <div class="modal-backdrop hidden" id="modal-commune">
   <div class="modal-box">
@@ -477,7 +602,7 @@ header {
     <button class="modal-close-btn grey" onclick="closeModal('modal-commune')">Fermer</button>
   </div>
 </div>
-
+ 
 <!-- MODAL : Comprendre le Risque -->
 <div class="modal-backdrop hidden" id="modal-risk">
   <div class="modal-box">
@@ -498,7 +623,7 @@ header {
     <button class="modal-close-btn" onclick="closeModal('modal-risk')">Fermer</button>
   </div>
 </div>
-
+ 
 <!-- MODAL : Que puis-je faire -->
 <div class="modal-backdrop hidden" id="modal-advice">
   <div class="modal-box">
@@ -530,7 +655,7 @@ header {
     <button class="modal-close-btn" onclick="closeModal('modal-advice')">Fermer</button>
   </div>
 </div>
-
+ 
 <script>
 // ─── CONSTANTES ─────────────────────────────────────────────────────────────
 const RISK_COLORS = { faible: '#4caf50', modere: '#ff9800', eleve: '#e53935' };
@@ -545,7 +670,7 @@ const RISK_TODO = {
   modere: ['Éliminez les eaux stagnantes', 'Protégez-vous des piqûres'],
   eleve:  ['Éliminez les eaux stagnantes', 'Protégez-vous des piqûres', 'Évitez les sorties à l\'aube et au crépuscule']
 };
-
+ 
 // ─── ÉTAT ────────────────────────────────────────────────────────────────────
 let mode = 'citoyen';   // 'citoyen' | 'elu'
 let allData = [];        // grouped JSON
@@ -553,14 +678,89 @@ let flatByCode = {};     // codgeo → array of weeks (sorted)
 let lastWeekDate = '';
 let geoLayer = null;
 let map;
-
+let weeks = [];          // liste des dates disponibles
+let weekIdx = 0;         // index de la semaine affichée
+let playTimer = null;
+ 
 // ─── INIT MAP ────────────────────────────────────────────────────────────────
 map = L.map('map', { center: [43.65, 3.4], zoom: 9, preferCanvas: true, zoomControl: true });
 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
   attribution: '© CartoDB', subdomains: 'abcd', maxZoom: 19
 }).addTo(map);
-
+ 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
+// ─── ESCALA DE RIESGO (breaks dinámicos) ─────────────────────────────────────
+let riskView = 'raw';
+const RISK_VIEW_ORDER = ['raw','per_km2','per_1000hab'];
+const RISK_VIEW_META = {
+  raw:         {label:'Brute',       legendTitle:'Abondance brute (ind/piège)'},
+  per_km2:     {label:'Par km²',     legendTitle:'Abondance / km²'},
+  per_1000hab: {label:'Par habitant',legendTitle:'Abondance / 1 000 hab.'}
+};
+ 
+// Umbrales p33/p66 calculados dinámicamente cada vez que cambia semana o vista
+let dynThresh = { per_km2:[0.3,1], per_1000hab:[1,10] };
+ 
+function pctCit(arr,p){const s=[...arr].sort((a,b)=>a-b);return s.length?s[Math.max(0,Math.ceil(s.length*p/100)-1)]:0;}
+ 
+function calcCitThresholds(curDate){
+  const collect=(fn)=>allData.map(c=>{
+    const w=curDate?(c.weeks.find(wk=>wk.date===curDate)||null):c.weeks[c.weeks.length-1];
+    if(!w||w.abundance===null||w.abundance===undefined)return null;
+    return fn(w.abundance,c);
+  }).filter(v=>v!==null&&!isNaN(v));
+ 
+  const vKm2=collect((ab,c)=>c.superficie_km2>0?ab/c.superficie_km2:null);
+  if(vKm2.length>=3) dynThresh.per_km2=[pctCit(vKm2,33),pctCit(vKm2,66)];
+ 
+  const vHab=collect((ab,c)=>c.population>0?(ab*1000)/c.population:null);
+  if(vHab.length>=3) dynThresh.per_1000hab=[pctCit(vHab,33),pctCit(vHab,66)];
+ 
+  updateCitLegend();
+}
+ 
+function f2(v){return v<0.001?v.toExponential(1):v<10?v.toFixed(2):v.toFixed(1);}
+ 
+function updateCitLegend(){
+  const meta=RISK_VIEW_META[riskView];
+  document.getElementById('legend-title').textContent=meta.legendTitle;
+  if(riskView==='raw'){
+    document.getElementById('leg-faible').innerHTML='Faible (&lt;3)';
+    document.getElementById('leg-modere').innerHTML='Modéré (3–10)';
+    document.getElementById('leg-eleve').innerHTML='Élevé (≥10)';
+  } else {
+    const [t1,t2]=dynThresh[riskView];
+    document.getElementById('leg-faible').innerHTML=`Faible (&lt;${f2(t1)})`;
+    document.getElementById('leg-modere').innerHTML=`Modéré (${f2(t1)}–${f2(t2)})`;
+    document.getElementById('leg-eleve').innerHTML=`Élevé (≥${f2(t2)})`;
+  }
+}
+ 
+function getViewVal(abundance,commune){
+  if(abundance===null||abundance===undefined)return null;
+  if(riskView==='per_km2')  return(commune&&commune.superficie_km2>0)?abundance/commune.superficie_km2:null;
+  if(riskView==='per_1000hab')return(commune&&commune.population>0)?(abundance*1000)/commune.population:null;
+  return abundance;
+}
+ 
+function scoreToRiskNorm(val){
+  if(val===null||val===undefined||isNaN(val))return'faible';
+  if(riskView==='raw') return scoreToRisk(val);
+  const[t1,t2]=dynThresh[riskView];
+  return val<t1?'faible':val<t2?'modere':'eleve';
+}
+ 
+let lastGeoJSON=null;
+ 
+function cycleRiskView(){
+  riskView=RISK_VIEW_ORDER[(RISK_VIEW_ORDER.indexOf(riskView)+1)%RISK_VIEW_ORDER.length];
+  document.getElementById('btn-risk-view').textContent='🔬 Vue: '+RISK_VIEW_META[riskView].label;
+  const curDate=weeks[weekIdx]||null;
+  calcCitThresholds(curDate);
+  if(lastGeoJSON)renderMap(lastGeoJSON);
+  updateBottomBar();
+}
+ 
 function scoreToRisk(ab) {
   if (ab === null || ab === undefined) return 'faible';
   if (ab < 3)  return 'faible';
@@ -583,28 +783,34 @@ function showError(msg) {
 }
 function openModal(id)  { document.getElementById(id).classList.remove('hidden'); }
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-
+ 
 // Fermer modal en cliquant le backdrop
 document.querySelectorAll('.modal-backdrop').forEach(el =>
   el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); })
 );
-
+ 
 // ─── CHARGEMENT DONNÉES ──────────────────────────────────────────────────────
 async function loadData() {
   setLoading('Chargement des données locales Hérault...');
   const r = await fetch('Data/albo_weekly_herault.json');
   if (!r.ok) throw new Error('Fichier introuvable (HTTP ' + r.status + ')');
   allData = await r.json();
-
+ 
   // Index par codgeo
   allData.forEach(c => { flatByCode[c.codgeo] = c; });
-
-  // Dernière semaine disponible
+ 
+  // Extraction des semaines disponibles
   if (allData.length && allData[0].weeks.length) {
-    lastWeekDate = allData[0].weeks[allData[0].weeks.length - 1].date;
+    weeks = allData[0].weeks.map(w => w.date);
+    weekIdx = weeks.length - 1;
+    lastWeekDate = weeks[weeks.length - 1];
+    const slider = document.getElementById('tn-slider');
+    slider.max = weeks.length - 1;
+    slider.value = weekIdx;
+    updateTimeDisplay();
   }
 }
-
+ 
 // ─── CHARGEMENT FRONTIÈRES ──────────────────────────────────────────────────
 async function loadGeo() {
   setLoading('Chargement des frontières communes...');
@@ -612,17 +818,25 @@ async function loadGeo() {
   if (!r.ok) throw new Error('Frontières indisponibles (HTTP ' + r.status + ')');
   return r.json();
 }
-
+ 
 // ─── RENDU CARTE ─────────────────────────────────────────────────────────────
 function renderMap(geojson) {
+  lastGeoJSON=geojson;
+  const _cd=weeks[weekIdx]||null;
+  if(riskView!=='raw')calcCitThresholds(_cd);
   if (geoLayer) { geoLayer.remove(); }
-
+ 
   geoLayer = L.geoJSON(geojson, {
     style: feature => {
       const code = feature.properties.code;
       const commune = flatByCode[code];
-      const lastWeek = commune ? commune.weeks[commune.weeks.length - 1] : null;
-      const risk = lastWeek ? scoreToRisk(lastWeek.abundance) : 'faible';
+      const curDate = weeks[weekIdx];
+      const weekData = commune
+        ? (curDate ? commune.weeks.find(w => w.date === curDate) : null) || commune.weeks[commune.weeks.length - 1]
+        : null;
+      const rawAb=weekData?weekData.abundance:null;
+      const normVal=(rawAb!==null)?getViewVal(rawAb,commune):null;
+      const risk=(normVal!==null)?scoreToRiskNorm(normVal):'faible';
       return {
         fillColor: RISK_COLORS[risk],
         fillOpacity: 0.65,
@@ -638,17 +852,22 @@ function renderMap(geojson) {
       });
     }
   }).addTo(map);
-
+ 
   // Barre de risque global (moyenne Hérault)
   updateBottomBar();
 }
-
+ 
 // ─── MISE À JOUR BARRE RISQUE GLOBAL ─────────────────────────────────────────
 function updateBottomBar() {
+  const curDate = weeks[weekIdx];
   const counts = { faible: 0, modere: 0, eleve: 0 };
   allData.forEach(c => {
-    const w = c.weeks[c.weeks.length - 1];
-    const r = w ? scoreToRisk(w.abundance) : 'faible';
+    const w = curDate
+      ? (c.weeks.find(wk => wk.date === curDate) || c.weeks[c.weeks.length - 1])
+      : c.weeks[c.weeks.length - 1];
+    const _ab=w?w.abundance:null;
+    const _nv=(_ab!==null)?getViewVal(_ab,c):null;
+    const r=(_nv!==null)?scoreToRiskNorm(_nv):'faible';
     counts[r]++;
   });
   // Risque dominant
@@ -658,30 +877,30 @@ function updateBottomBar() {
   document.getElementById('bottom-msg').textContent =
     `Risque ${RISK_LABELS[dominant].toLowerCase()} actuellement sur votre zone !`;
 }
-
+ 
 // ─── FICHE COMMUNE ───────────────────────────────────────────────────────────
 function showCommune(code, nom) {
   const commune = flatByCode[code];
   document.getElementById('mc-name').textContent = nom || code;
-
+ 
   if (!commune || !commune.weeks.length) {
     document.getElementById('mc-level-badge').textContent = 'Inconnu';
     openModal('modal-commune');
     return;
   }
-
+ 
   const weeks = commune.weeks;
   const last  = weeks[weeks.length - 1];
   const prev  = weeks.length > 1 ? weeks[weeks.length - 2] : null;
-
+ 
   const risk     = scoreToRisk(last.abundance);
   const riskPrev = prev ? scoreToRisk(prev.abundance) : risk;
-
+ 
   // Niveau
   const badge = document.getElementById('mc-level-badge');
   badge.textContent = RISK_LABELS[risk];
   badge.className = 'mc-level-badge ' + risk;
-
+ 
   // Tendance
   const trendEl   = document.getElementById('mc-trend');
   const trendIcon = document.getElementById('mc-trend-icon');
@@ -690,20 +909,20 @@ function showCommune(code, nom) {
   if (delta > 0)      { trendEl.textContent = '↗ En hausse';  trendIcon.style.background = '#e53935'; }
   else if (delta < 0) { trendEl.textContent = '↘ En baisse';  trendIcon.style.background = '#4caf50'; }
   else                { trendEl.textContent = '→ Stable';      trendIcon.style.background = '#1a5490'; }
-
+ 
   // Date
   document.getElementById('mc-date').textContent = fmtDate(last.date);
-
+ 
   // Interprétation
   document.getElementById('mc-interpretation').textContent = RISK_INTERP[risk];
-
+ 
   // À faire
   const todoEl = document.getElementById('mc-todo');
   todoEl.innerHTML = RISK_TODO[risk].map(t => `<li>${t}</li>`).join('');
-
+ 
   openModal('modal-commune');
 }
-
+ 
 // ─── STATS HEBDOMADAIRES ─────────────────────────────────────────────────────
 function computeWeeklyStats() {
   const dateMap = {};
@@ -725,25 +944,25 @@ function computeWeeklyStats() {
       total:  vals.length
     }));
 }
-
+ 
 // ─── VISUALISATIONS MODE ÉLU ─────────────────────────────────────────────────
 const eluCharts = {};
 function destroyEluChart(id) {
   if (eluCharts[id]) { eluCharts[id].destroy(); delete eluCharts[id]; }
 }
-
+ 
 function buildEluCharts() {
   if (!allData.length) return;
   const weeklyStats = computeWeeklyStats();
   const recent = weeklyStats.slice(-30);
-
+ 
   updateEluKPIs(weeklyStats);
   buildFullTrendChart(recent);
   buildStackedRiskChart(recent);
   buildRankingChart();
   buildAlertsPanel();
 }
-
+ 
 function updateEluKPIs(weeklyStats) {
   const last = weeklyStats[weeklyStats.length - 1];
   if (!last) return;
@@ -751,7 +970,7 @@ function updateEluKPIs(weeklyStats) {
   document.getElementById('elu-nb-modere').textContent = last.modere;
   document.getElementById('elu-mean-ab').textContent   = last.mean.toFixed(1);
 }
-
+ 
 function buildFullTrendChart(recent) {
   const labels = recent.map(s => s.date.slice(5));
   const data   = recent.map(s => s.mean);
@@ -792,7 +1011,7 @@ function buildFullTrendChart(recent) {
     }
   });
 }
-
+ 
 function buildStackedRiskChart(recent) {
   const labels  = recent.map(s => s.date.slice(5));
   destroyEluChart('chart-elu-stack');
@@ -818,7 +1037,7 @@ function buildStackedRiskChart(recent) {
     }
   });
 }
-
+ 
 function buildRankingChart() {
   const ranked = allData
     .map(c => {
@@ -827,7 +1046,7 @@ function buildRankingChart() {
     })
     .sort((a, b) => b.val - a.val)
     .slice(0, 10);
-
+ 
   destroyEluChart('chart-elu-rank');
   eluCharts['chart-elu-rank'] = new Chart(document.getElementById('chart-elu-rank'), {
     type: 'bar',
@@ -848,9 +1067,9 @@ function buildRankingChart() {
       }
     }
   });
-
+ 
 }
-
+ 
 function buildAlertsPanel() {
   const alerts = allData
     .map(c => {
@@ -861,7 +1080,7 @@ function buildAlertsPanel() {
     .filter(a => a.val >= 3)
     .sort((a, b) => b.val - a.val)
     .slice(0, 15);
-
+ 
   const html = alerts.length
     ? alerts.map(a => {
         const cls   = a.val >= 10 ? 'high' : 'med';
@@ -876,10 +1095,10 @@ function buildAlertsPanel() {
         </div>`;
       }).join('')
     : '<div style="color:#aaa;font-size:11px;text-align:center;padding:20px">Aucune alerte cette semaine</div>';
-
+ 
   document.getElementById('elu-alert-list').innerHTML = html;
 }
-
+ 
 // ─── SWITCH TAB ÉLU ──────────────────────────────────────────────────────────
 function switchEluTab(id, btn) {
   document.querySelectorAll('.elu-tab').forEach(b => b.classList.remove('active'));
@@ -887,13 +1106,49 @@ function switchEluTab(id, btn) {
   btn.classList.add('active');
   document.getElementById('elu-pane-' + id).classList.add('active');
 }
-
+ 
+// ─── NAVIGATION TEMPORELLE ───────────────────────────────────────────────────
+function updateTimeDisplay() {
+  if (!weeks.length) return;
+  document.getElementById('tn-current-date').textContent = fmtDate(weeks[weekIdx]);
+  document.getElementById('tn-week-info').textContent = `Sem. ${weekIdx + 1} / ${weeks.length}`;
+  document.getElementById('tn-slider').value = weekIdx;
+}
+function onSlider(v) {
+  weekIdx = parseInt(v);
+  updateTimeDisplay();
+  if (geojsonData) renderMap(geojsonData);
+}
+function prevWeek() {
+  if (weekIdx > 0) { weekIdx--; updateTimeDisplay(); if (geojsonData) renderMap(geojsonData); }
+}
+function nextWeek() {
+  if (weekIdx < weeks.length - 1) { weekIdx++; updateTimeDisplay(); if (geojsonData) renderMap(geojsonData); }
+}
+function togglePlay() {
+  const btn = document.getElementById('play-btn');
+  if (playTimer) {
+    clearInterval(playTimer); playTimer = null;
+    btn.textContent = '▶ Play'; btn.classList.remove('active');
+  } else {
+    btn.textContent = '⏸ Pause'; btn.classList.add('active');
+    playTimer = setInterval(() => {
+      if (weekIdx < weeks.length - 1) {
+        weekIdx++; updateTimeDisplay(); if (geojsonData) renderMap(geojsonData);
+      } else {
+        clearInterval(playTimer); playTimer = null;
+        btn.textContent = '▶ Play'; btn.classList.remove('active');
+      }
+    }, 700);
+  }
+}
+ 
 // ─── TOGGLE MODE ─────────────────────────────────────────────────────────────
 function toggleMode() {
   mode = mode === 'citoyen' ? 'elu' : 'citoyen';
   const btn    = document.getElementById('btn-hmode');
   const legend = document.getElementById('legend');
-
+ 
   if (mode === 'elu') {
     btn.textContent = 'Élu';
     btn.classList.add('active');
@@ -915,7 +1170,7 @@ function toggleMode() {
     legend.classList.remove('elu-shift');
   }
 }
-
+ 
 // ─── EXPORT CSV ──────────────────────────────────────────────────────────────
 function exportCSV() {
   const rows = [['codgeo', 'libgeo', 'date', 'abondance', 'risque']];
@@ -928,34 +1183,41 @@ function exportCSV() {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
   a.download = `risque_herault_${lastWeekDate}.csv`; a.click();
 }
-
+ 
 // ─── WIDGET RECHERCHE COMMUNE ────────────────────────────────────────────────
 let swMatches = [];
 let swFocusIdx = -1;
 let swSelectedCode = null;
 let geojsonData = null;
-
+ 
+function swToggle() {
+  const body = document.getElementById('sw-body');
+  const btn  = document.getElementById('sw-toggle-btn');
+  const collapsed = body.classList.toggle('collapsed');
+  btn.textContent = collapsed ? '+' : '×';
+}
+ 
 function swOnInput(val) {
   swFocusIdx = -1;
   const q = val.trim().toLowerCase();
   const box = document.getElementById('sw-suggestions');
   document.getElementById('sw-result').classList.add('hidden');
   swSelectedCode = null;
-
+ 
   if (q.length < 2) { box.innerHTML = ''; return; }
-
+ 
   swMatches = allData
     .filter(c => c.libgeo.toLowerCase().includes(q))
     .slice(0, 8);
-
+ 
   if (!swMatches.length) { box.innerHTML = '<div class="sw-suggestion" style="color:#aaa;cursor:default">Aucun résultat</div>'; return; }
-
+ 
   box.innerHTML = swMatches.map((c, i) => {
     const hl = c.libgeo.replace(new RegExp(val.trim(), 'gi'), m => `<b>${m}</b>`);
     return `<div class="sw-suggestion" data-idx="${i}" onmousedown="swSelect(${i})">${hl}</div>`;
   }).join('');
 }
-
+ 
 function swOnKey(e) {
   const items = document.querySelectorAll('.sw-suggestion');
   if (e.key === 'ArrowDown') { swFocusIdx = Math.min(swFocusIdx + 1, items.length - 1); swHighlight(items); e.preventDefault(); }
@@ -963,11 +1225,11 @@ function swOnKey(e) {
   else if (e.key === 'Enter' && swFocusIdx >= 0) { swSelect(swFocusIdx); }
   else if (e.key === 'Escape') { document.getElementById('sw-suggestions').innerHTML = ''; }
 }
-
+ 
 function swHighlight(items) {
   items.forEach((el, i) => el.classList.toggle('focused', i === swFocusIdx));
 }
-
+ 
 function swSelect(idx) {
   const commune = swMatches[idx];
   if (!commune) return;
@@ -977,7 +1239,7 @@ function swSelect(idx) {
   swShowResult(commune);
   swZoom(commune.codgeo);
 }
-
+ 
 function swShowResult(commune) {
   const weeks   = commune.weeks;
   const last    = weeks[weeks.length - 1];
@@ -988,7 +1250,7 @@ function swShowResult(commune) {
   const delta   = rOrder[risk] - rOrder[riskPrev];
   const arrow   = delta > 0 ? '↗ En hausse' : delta < 0 ? '↘ En baisse' : '→ Stable';
   const arrowColor = delta > 0 ? '#e53935' : delta < 0 ? '#4caf50' : '#1a5490';
-
+ 
   document.getElementById('sw-rname').textContent = commune.libgeo;
   document.getElementById('sw-rkpis').innerHTML = `
     <div class="sw-kpi risk-${risk}">
@@ -1003,22 +1265,22 @@ function swShowResult(commune) {
       <span class="sw-kpi-val">${last?.temperature != null ? last.temperature.toFixed(1) + '°' : '—'}</span>
       <span class="sw-kpi-lbl">Temp.</span>
     </div>`;
-
+ 
   document.getElementById('sw-rtrend').innerHTML =
     `<span style="color:${arrowColor};font-weight:600">${arrow}</span>
      &nbsp;·&nbsp; Sem. du ${fmtDate(last?.date)}`;
-
+ 
   document.getElementById('sw-rbtn').onclick = () => showCommune(commune.codgeo, commune.libgeo);
   document.getElementById('sw-result').classList.remove('hidden');
 }
-
+ 
 function swZoom(code) {
   if (!geojsonData) return;
   const feat = geojsonData.features.find(f => f.properties.code === code);
   if (!feat) return;
   map.fitBounds(L.geoJSON(feat).getBounds(), { padding: [40, 40], maxZoom: 13 });
 }
-
+ 
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 (async () => {
   try {
@@ -1031,6 +1293,65 @@ function swZoom(code) {
     console.error(e);
   }
 })();
+ 
+// ── MODAL BIENVENIDA ─────────────────────────────────────────────────────────
+function closeWelcome(){
+  var modal = document.getElementById('modal-welcome');
+  var box   = document.getElementById('welcome-box');
+  var bubble= document.getElementById('welcome-bubble');
+  // trigger minimise animation
+  modal.classList.add('minimizing');
+  box.classList.add('minimizing');
+  setTimeout(function(){
+    modal.classList.add('hidden');
+    modal.classList.remove('minimizing');
+    box.classList.remove('minimizing');
+    bubble.classList.add('visible');
+  }, 450);
+}
+function openWelcome(){
+  var modal = document.getElementById('modal-welcome');
+  var bubble= document.getElementById('welcome-bubble');
+  bubble.classList.remove('visible');
+  modal.classList.remove('hidden');
+}
+function wToggle(h){var b=h.nextElementSibling,i=h.querySelector('.wc-acc-icon'),o=b.classList.contains('open');b.classList.toggle('open',!o);i.textContent=o?'+':'−';}
+document.getElementById('modal-welcome').addEventListener('click',function(e){if(e.target===this)closeWelcome();});
 </script>
+ 
+<!-- ── MODAL BIENVENIDA ────────────────────────────────────────────────────── -->
+<div id="modal-welcome">
+  <div id="welcome-box">
+    <button id="welcome-close" onclick="closeWelcome()" title="Fermer">✕</button>
+    <img src="preview.webp" alt="Comment lutter contre le moustique tigre" style="width:100%;display:block;border-radius:16px 16px 0 0;">
+    <div class="wc-section-bg">
+      <div class="wc-accordion">
+        <div class="wc-acc-header" onclick="wToggle(this)"><span>S’informer</span><span class="wc-acc-icon">+</span></div>
+        <div class="wc-acc-body">
+          <div class="wc-acc-item"><div class="wc-acc-item-title">Tout savoir sur le moustique tigre :</div>
+            <a class="wc-yt-thumb" href="https://www.youtube.com/watch?v=I2G2Ze7yKHs" target="_blank" rel="noopener"><img src="https://img.youtube.com/vi/I2G2Ze7yKHs/hqdefault.jpg" alt="Moustique tigre"></a>
+          </div>
+          <div class="wc-acc-item"><div class="wc-acc-item-title">Lutter contre les moustiques-tigres :</div>
+            <a href="https://www.montpellier.fr/vie-quotidienne/vivre-ici/jardiner-embellir/lutter-contre-les-moustiques" target="_blank" rel="noopener">montpellier.fr/lutter-contre-les-moustiques</a>
+          </div>
+          <div class="wc-acc-item"><div class="wc-acc-item-title">Tout savoir sur les moustiques :</div>
+            <a href="https://agirmoustique.fr/savoir/" target="_blank" rel="noopener">agirmoustique.fr/savoir/</a>
+          </div>
+        </div>
+      </div>
+      <div class="wc-accordion">
+        <div class="wc-acc-header" onclick="wToggle(this)"><span>Agir</span><span class="wc-acc-icon">+</span></div>
+        <div class="wc-acc-body">
+          <div class="wc-acc-item"><div class="wc-acc-item-title">Signalez la présence du moustique tigre :</div>
+            <a href="https://signalement-moustique.anses.fr/signalement_albopictus/" target="_blank" rel="noopener">signalement-moustique.anses.fr</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Bulle flottante pour rouvrir le modal -->
+
+<div id="welcome-bubble" onclick="openWelcome()" title="Infos moustique tigre"><img src="Moustique.png" alt="moustique" style="width:34px;height:34px;object-fit:contain;"></div>
 </body>
 </html>

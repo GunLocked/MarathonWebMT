@@ -20,7 +20,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:var(--font-body);height:100vh;overflow:hidden;display:grid;grid-template-rows:56px 1fr;grid-template-columns:280px 1fr 340px}
-
+ 
 /* HEADER */
 header{grid-column:1/-1;background:#1a5490;border-bottom:none;display:flex;align-items:center;padding:0 20px;gap:16px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
 .logo{font-family:var(--font-mono);font-size:12px;color:#fff;letter-spacing:2px;text-transform:uppercase;white-space:nowrap}
@@ -34,14 +34,14 @@ header{grid-column:1/-1;background:#1a5490;border-bottom:none;display:flex;align
 .hkpi .val.danger{color:#ff8a80}
 .status-dot{width:8px;height:8px;border-radius:50%;background:#4caf50;box-shadow:0 0 8px #4caf50;animation:pulse 2s infinite;margin-left:10px}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-
+ 
 /* PANELS */
 .panel-left{background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px}
 .panel-right{background:var(--surface);border-left:1px solid var(--border);overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
-
+ 
 /* MAP */
 #map{width:100%;height:100%;background:#e8ecf0}
-
+ 
 /* SHARED */
 .section-label{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
 .box{background:var(--surface2);border-radius:10px;padding:12px;border:1px solid var(--border)}
@@ -50,7 +50,20 @@ header{grid-column:1/-1;background:#1a5490;border-bottom:none;display:flex;align
 .chart-wrap canvas{position:absolute;top:0;left:0;width:100%!important;height:100%!important}
 .chart-title{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .chart-title .badge{background:rgba(26,84,144,.12);color:var(--accent);border-radius:4px;padding:1px 6px;font-size:9px}
-
+.chart-expand-btn{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:13px;line-height:1;padding:0 2px;transition:color .15s;opacity:.6}
+.chart-expand-btn:hover{color:var(--accent);opacity:1}
+ 
+/* CHART MODAL */
+#chart-modal{position:fixed;inset:0;z-index:9000;background:rgba(15,23,42,.82);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center}
+#chart-modal.hidden{display:none}
+#chart-modal-inner{background:var(--surface);border-radius:14px;padding:20px;box-shadow:0 8px 40px rgba(0,0,0,.35);max-width:90vw;max-height:88vh;display:flex;flex-direction:column;gap:12px;min-width:480px}
+#chart-modal-header{display:flex;align-items:center;justify-content:space-between}
+#chart-modal-title{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
+#chart-modal-close{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px;color:var(--text-muted);transition:all .15s}
+#chart-modal-close:hover{border-color:var(--danger);color:var(--danger)}
+#chart-modal-canvas-wrap{flex:1;overflow:hidden;border-radius:8px;background:var(--surface2);border:1px solid var(--border)}
+#chart-modal-canvas-wrap canvas{width:100%!important;height:100%!important}
+ 
 /* KPI GRID */
 .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 10px 8px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
@@ -67,7 +80,7 @@ header{grid-column:1/-1;background:#1a5490;border-bottom:none;display:flex;align
 .kpi-card .kl{font-size:10px;color:var(--text-muted)}
 .kpi-card .kdelta{font-size:9px;font-family:var(--font-mono);margin-top:4px}
 .kdelta.up{color:var(--danger)} .kdelta.down{color:var(--ok)} .kdelta.neutral{color:var(--text-muted)}
-
+ 
 /* RISK METER */
 .risk-meter{display:flex;gap:4px;margin-top:8px}
 .risk-bar{flex:1;height:6px;border-radius:3px;background:var(--border)}
@@ -76,14 +89,14 @@ header{grid-column:1/-1;background:#1a5490;border-bottom:none;display:flex;align
 .risk-bar.active-high{background:#f97316}
 .risk-bar.active-vhigh{background:var(--danger)}
 .risk-label{font-family:var(--font-mono);font-size:9px;color:var(--text-muted);text-align:right;margin-top:3px}
-
+ 
 /* VAR BUTTONS */
 .var-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .var-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 6px;cursor:pointer;transition:all .2s;text-align:center;color:var(--text-muted);font-family:var(--font-body);font-size:11px}
 .var-btn:hover{border-color:var(--accent);color:var(--text)}
 .var-btn.active{background:rgba(26,84,144,.1);border-color:var(--accent);color:var(--accent);font-weight:600}
 .var-btn .icon{font-size:16px;display:block;margin-bottom:3px}
-
+ 
 /* TIME CONTROLS */
 .time-display{font-family:var(--font-mono);font-size:13px;color:var(--accent);margin-bottom:8px;text-align:center}
 .time-display small{display:block;font-size:9px;color:var(--text-muted);margin-top:2px}
@@ -92,11 +105,11 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
 .btn{background:var(--surface);border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:5px 10px;cursor:pointer;font-family:var(--font-mono);font-size:10px;transition:all .2s;flex:1;text-align:center}
 .btn:hover{border-color:var(--accent);color:var(--accent)}
 .btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
-
+ 
 /* LEGEND */
 .legend-bar{border-radius:8px;height:10px;margin-bottom:5px}
 .legend-labels{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:9px;color:var(--text-muted)}
-
+ 
 /* DEP RANKING */
 .dep-rank{display:flex;flex-direction:column;gap:5px;margin-top:4px}
 .dep-row{display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--surface);border-radius:6px;border:1px solid var(--border);cursor:pointer;transition:all .2s}
@@ -106,7 +119,7 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
 .dep-row .dep-val{font-family:var(--font-mono);font-size:11px;color:var(--accent);font-weight:700}
 .dep-row .dep-bar-wrap{width:60px;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
 .dep-row .dep-bar-fill{height:100%;border-radius:2px;background:var(--accent);transition:width .4s}
-
+ 
 /* ALERT BOX */
 .alert-list{display:flex;flex-direction:column;gap:5px}
 .alert-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;border:1px solid;font-size:11px}
@@ -117,14 +130,14 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
 .alert-item.high .alert-dot{background:var(--danger)}
 .alert-item.med .alert-dot{background:var(--warn)}
 .alert-item.low .alert-dot{background:var(--ok)}
-
+ 
 /* LOADING / ERROR */
 #loading{position:fixed;inset:0;background:rgba(240,244,248,.92);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:20px}
 .loader{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-text{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);text-align:center;max-width:320px;line-height:1.8}
 .error-box{background:#fff3f3;border:1px solid #ffcdd2;border-radius:10px;padding:20px;font-family:var(--font-mono);font-size:11px;color:var(--danger);text-align:center;line-height:2;max-width:360px}
-
+ 
 /* MAP OVERRIDES */
 .leaflet-container{background:#e8ecf0 !important}
 .leaflet-tile{filter:none}
@@ -136,23 +149,23 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
 .leaflet-popup-content-wrapper{background:transparent !important;box-shadow:none !important;padding:0 !important}
 .leaflet-popup-tip{background:#fff !important}
 .leaflet-popup-content{margin:0 !important}
-
+ 
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-
+ 
 /* TAB SYSTEM */
 .tabs{display:flex;gap:4px;margin-bottom:10px}
 .tab{font-family:var(--font-mono);font-size:9px;padding:4px 10px;border-radius:5px;border:1px solid var(--border);cursor:pointer;color:var(--text-muted);transition:all .2s;background:var(--surface)}
 .tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .tab-pane{display:none}
 .tab-pane.active{display:block}
-
+ 
 /* SCATTER overlay label */
 .bivar-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}
 .bivar-item{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--text-muted);font-family:var(--font-mono)}
 .bivar-dot{width:8px;height:8px;border-radius:50%}
-
+ 
 /* SPARKLINE mini */
 .sparkline-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)}
 .sparkline-row:last-child{border:none}
@@ -162,16 +175,17 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
 </style>
 </head>
 <body>
-
+ 
 <div id="loading">
   <div class="loader"></div>
   <div class="loading-text" id="loading-text">Connexion au GeoServer INRAE...</div>
 </div>
-
+ 
 <header>
   <div class="logo">OMEES <span>//</span> Aedes albopictus</div>
   <div class="header-badge">📊 TABLEAU DE BORD RÉGIONAL</div>
   <a href="index.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap;margin-left:6px">← Vue Citoyen</a>
+  <button id="btn-risk-view" onclick="cycleAbundScale()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;margin-left:4px">🔬 Échelle: Brute</button>
   <div class="header-kpis">
     <div class="hkpi"><div class="lbl">Semaines</div><div class="val" id="h-weeks">—</div></div>
     <div class="hkpi"><div class="lbl">Communes</div><div class="val" id="h-communes">—</div></div>
@@ -181,7 +195,7 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
   </div>
   <div class="status-dot"></div>
 </header>
-
+ 
 <!-- LEFT PANEL -->
 <div class="panel-left">
   <!-- Variable -->
@@ -194,8 +208,8 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
       <button class="var-btn" data-var="humidity" onclick="setVar(this)"><span class="icon">💧</span>Humidité</button>
     </div>
   </div>
-
-
+ 
+ 
   <!-- Temps -->
   <div class="box">
     <div class="section-label">Navigation temporelle</div>
@@ -210,7 +224,7 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
       <button class="btn" onclick="nextWeek()">Suiv ▶</button>
     </div>
   </div>
-
+ 
   <!-- Légende -->
   <div>
     <div class="section-label">Légende — <span id="legend-label">Abondance</span></div>
@@ -219,7 +233,7 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
       <span id="leg-min">0</span><span id="leg-mid">—</span><span id="leg-max">max</span>
     </div>
   </div>
-
+ 
   <!-- KPI semaine -->
   <div>
     <div class="section-label">Stats — semaine courante</div>
@@ -244,7 +258,7 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
       </div>
     </div>
   </div>
-
+ 
   <!-- Niveau de risque -->
   <div class="box">
     <div class="section-label">Niveau de risque vecteur</div>
@@ -255,10 +269,10 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
     <div class="risk-label" id="risk-label">—</div>
   </div>
 </div>
-
+ 
 <!-- MAP -->
 <div id="map"></div>
-
+ 
 <!-- RIGHT PANEL -->
 <div class="panel-right">
   <!-- Tabs -->
@@ -268,24 +282,33 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
     <div class="tab" onclick="switchTab('tab-trend')">Tendances</div>
     <div class="tab" onclick="switchTab('tab-alerts')">Alertes</div>
   </div>
-
+ 
   <!-- TAB: Graphique bivarié Abondance × Température -->
   <div class="tab-pane active" id="tab-bivar">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+      <button id="scale-toggle-btn" onclick="toggleScatterScale()" style="font-family:var(--font-mono);font-size:9px;padding:3px 10px;border-radius:5px;border:1px solid var(--accent);background:rgba(26,84,144,.1);color:var(--accent);cursor:pointer;transition:all .2s" title="Basculer échelle fixe / adaptative">
+        📐 Échelle fixe
+      </button>
+    </div>
     <div class="chart-box">
       <div class="chart-title">🔬 Abondance × Température <span class="badge">BIVARIÉ</span></div>
-      <div class="chart-wrap" style="height:200px"><canvas id="chart-scatter"></canvas></div>
+      <div class="chart-wrap" style="height:200px"><canvas id="chart-scatter" style="cursor:pointer"></canvas></div>
       <div class="bivar-legend" id="bivar-legend"></div>
     </div>
     <div class="chart-box" style="margin-top:10px">
       <div class="chart-title">💧 Abondance × Humidité <span class="badge">BIVARIÉ</span></div>
-      <div class="chart-wrap" style="height:160px"><canvas id="chart-scatter2"></canvas></div>
+      <div class="chart-wrap" style="height:160px"><canvas id="chart-scatter2" style="cursor:pointer"></canvas></div>
     </div>
     <div class="chart-box" style="margin-top:10px">
-      <div class="chart-title">📈 Corrélations croisées <span class="badge">MATRICE</span></div>
-      <div class="chart-wrap" style="height:260px"><canvas id="chart-bubble"></canvas></div>
+      <div class="chart-title">🧠 Importance des variables <span class="badge">SHAP</span></div>
+      <div class="chart-wrap" style="height:180px"><canvas id="chart-shap"></canvas></div>
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-top:8px;line-height:1.6">
+        Importance proxy calculée comme |r(var, abondance)| pondérée par la variance normalisée.
+        <span style="color:var(--danger)">■</span> effet positif &nbsp; <span style="color:var(--accent2)">■</span> effet négatif
+      </div>
     </div>
   </div>
-
+ 
   <!-- TAB: Classement départements -->
   <div class="tab-pane" id="tab-rank">
     <div class="box">
@@ -295,12 +318,16 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
       </div>
     </div>
   </div>
-
+ 
   <!-- TAB: Tendances temporelles -->
   <div class="tab-pane" id="tab-trend">
     <div class="chart-box">
-      <div class="chart-title">📅 Évolution abondance — dept.</div>
+      <div class="chart-title">📅 Évolution abondance — dept. <span class="badge">RISQUE</span></div>
       <div class="chart-wrap" style="height:180px"><canvas id="chart-trend"></canvas></div>
+    </div>
+    <div class="chart-box" style="margin-top:10px">
+      <div class="chart-title">📊 Distribution des risques <span class="badge">EMPILÉ</span></div>
+      <div class="chart-wrap" style="height:150px"><canvas id="chart-risk-stack"></canvas></div>
     </div>
     <div class="chart-box" style="margin-top:10px">
       <div class="chart-title">🌡️ Température × Abondance <span class="badge">DUAL</span></div>
@@ -315,7 +342,7 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
       <div class="chart-wrap" style="height:120px"><canvas id="chart-histo"></canvas></div>
     </div>
   </div>
-
+ 
   <!-- TAB: Alertes -->
   <div class="tab-pane" id="tab-alerts">
     <div class="box">
@@ -330,11 +357,21 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
     </div>
   </div>
 </div>
-
-
-
-
-
+ 
+<!-- CHART MODAL -->
+<div id="chart-modal" class="hidden">
+  <div id="chart-modal-inner">
+    <div id="chart-modal-header">
+      <span id="chart-modal-title">Graphique</span>
+      <button id="chart-modal-close" onclick="closeChartModal()">✕ Fermer</button>
+    </div>
+    <div id="chart-modal-canvas-wrap" style="height:65vh">
+      <canvas id="chart-modal-canvas"></canvas>
+    </div>
+  </div>
+</div>
+ 
+ 
 <script>
 const DATA_SOURCE='wfs';
 const WFS='./omees/proxy.php';
@@ -347,12 +384,45 @@ const VARS={
   humidity:{col:'hum',label:'Humidité',unit:'%',colors:['#fff5eb','#fdd0a2','#fd8d3c','#d94801','#7f2704'],breaks:[40,55,65,75,90],grad:'linear-gradient(to right,#fff5eb,#fdd0a2,#fd8d3c,#d94801,#7f2704)'}
 };
 const DEP_PALETTE=['#00d4ff','#7c3aed','#f97316','#22c55e','#f59e0b','#ec4899','#a78bfa'];
-
+ 
+// ── GESTION DES ÉCHELLES ──────────────────────────────────────────────────────
+const ABUND_COLOR_RAMP = ['#4caf50','#8bc34a','#ff9800','#f44336','#b71c1c'];
+const ABUND_GRAD = 'linear-gradient(to right,#4caf50,#8bc34a,#ff9800,#f44336,#b71c1c)';
+let dynBreaks = { per_km2:[0,0.05,0.15,0.5,1.5], per_1000hab:[0,0.2,0.5,2,5] };
+function pct(arr,p){const s=[...arr].sort((a,b)=>a-b);return s.length?s[Math.max(0,Math.ceil(s.length*p/100)-1)]:0;}
+function calcRegBreaks(features){
+  const abund=f=>parseFloat(f.properties.mean_abundance_albopictus);
+  const vKm2=features.filter(f=>f.properties.superficie_km2>0&&!isNaN(abund(f))).map(f=>abund(f)/f.properties.superficie_km2);
+  if(vKm2.length>=5) dynBreaks.per_km2=[0,pct(vKm2,20),pct(vKm2,40),pct(vKm2,60),pct(vKm2,80)];
+  const vHab=features.filter(f=>f.properties.population>0&&!isNaN(abund(f))).map(f=>(abund(f)*1000)/f.properties.population);
+  if(vHab.length>=5) dynBreaks.per_1000hab=[0,pct(vHab,20),pct(vHab,40),pct(vHab,60),pct(vHab,80)];
+}
+const ABUND_SCALE_ORDER=['raw','per_km2','per_1000hab'];
+let abundScale='raw';
+const ABUND_SCALES={
+  raw:        {label:'Abondance brute', unit:'ind/piège',   getValue:p=>parseFloat(p.mean_abundance_albopictus)},
+  per_km2:    {label:'Abond. / km²',   unit:'ind/km²',     getValue:p=>p.superficie_km2>0?parseFloat(p.mean_abundance_albopictus)/p.superficie_km2:NaN},
+  per_1000hab:{label:'Abond./1000hab', unit:'ind/1000hab', getValue:p=>p.population>0?(parseFloat(p.mean_abundance_albopictus)*1000)/p.population:NaN}
+};
+function getActiveCfg(baseCfg){
+  if(abundScale==='raw') return baseCfg;
+  return{colors:ABUND_COLOR_RAMP,grad:ABUND_GRAD,breaks:dynBreaks[abundScale],
+         label:ABUND_SCALES[abundScale].label,unit:ABUND_SCALES[abundScale].unit};
+}
+function cycleAbundScale(){
+  abundScale=ABUND_SCALE_ORDER[(ABUND_SCALE_ORDER.indexOf(abundScale)+1)%ABUND_SCALE_ORDER.length];
+  document.getElementById('btn-risk-view').textContent={raw:'🔬 Échelle: Brute',per_km2:'🗺 Échelle: /km²',per_1000hab:'👤 Échelle: /hab.'}[abundScale];
+  if(weeks.length) loadWeek(weekIdx);
+}
+// ─────────────────────────────────────────────────────────────────────────────
+ 
 let weeks=[], weekIdx=0, curVar='abundance', geoLayer=null, playTimer=null, map, curDep='34', prevWeekVals=null;
-let baseGeoJSON = null; 
+let baseGeoJSON = null;
 let cachedWfsData = [];
+let scatterScales = {};       // plages fixes calculées sur toutes les semaines
+let scatterFixedScale = true; // true = axes fixes, false = adaptatif
 const charts={};
-
+ 
 const fmt=(v,u)=>{const f=parseFloat(v);return isNaN(f)?'N/D':f.toFixed(1)+u;};
 const fmtDate=d=>{if(!d)return'—';return new Date(d+'T00:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});};
 const gk=(v,c)=>{if(isNaN(v)||v===null)return'#1a2235';for(let i=c.breaks.length-1;i>=0;i--)if(v>=c.breaks[i])return c.colors[i];return c.colors[0];};
@@ -364,12 +434,12 @@ function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];
 function setLoading(t){const el=document.getElementById('loading');el.style.display='flex';el.innerHTML=`<div class="loader"></div><div class="loading-text">${t}</div>`;}
 function hideLoading(){document.getElementById('loading').style.display='none';}
 function showError(m){document.getElementById('loading').innerHTML=`<div class="error-box">&#9888; Erreur<br><br>${m}<br><br><button class="btn" style="flex:none;padding:8px 20px" onclick="initDashboard()">Réessayer</button></div>`;}
-
+ 
 function initMap(){
   map=L.map('map',{center:[43.6,3.4],zoom:9,preferCanvas:true});
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'CartoDB',subdomains:'abcd',maxZoom:19}).addTo(map);
 }
-
+ 
 function autoDetect(p){
   const k=Object.keys(p),find=(...t)=>k.find(key=>t.some(x=>key.toLowerCase().includes(x)));
   C.abund=find('abundance','abondance')||C.abund;C.temp=find('temperature','temp')||C.temp;
@@ -377,20 +447,20 @@ function autoDetect(p){
   C.date=find('date','week','semaine')||C.date;C.libgeo=find('libgeo','libelle','nom_com','nom')||C.libgeo;
   C.codgeo=find('codgeo','code_insee','insee')||C.codgeo;
 }
-
+ 
 async function initDashboard(){
   setLoading('Chargement frontières (Hérault)...');
   try {
     const rGeo = await fetch('https://geo.api.gouv.fr/departements/34/communes?format=geojson&geometry=contour');
     baseGeoJSON = await rGeo.json();
     setEl('h-communes', baseGeoJSON.features.length);
-
+ 
     setLoading('Chargement données locales Hérault...');
     const rLocal = await fetch('Data/albo_weekly_herault.json');
     if(!rLocal.ok) throw new Error('Fichier local introuvable (HTTP ' + rLocal.status + ')');
     const grouped = await rLocal.json();
     if(!grouped.length) throw new Error('Aucune donnée trouvée dans le fichier local.');
-
+ 
     // Aplatir la structure groupée → tableau plat compatible avec le reste du code
     cachedWfsData = [];
     for(const commune of grouped){
@@ -409,11 +479,23 @@ async function initDashboard(){
         });
       }
     }
-
+ 
     autoDetect(cachedWfsData[0]);
-
+ 
     const wSet = new Set(cachedWfsData.map(p => (p[C.date]||'').substring(0,10)).filter(Boolean));
     weeks = [...wSet].sort();
+ 
+    // Plages globales pour axes fixes des scatter (toutes semaines)
+    const _ab=cachedWfsData.map(p=>parseFloat(p[C.abund])).filter(v=>!isNaN(v));
+    const _tp=cachedWfsData.map(p=>parseFloat(p[C.temp])).filter(v=>!isNaN(v));
+    const _hm=cachedWfsData.map(p=>parseFloat(p[C.hum])).filter(v=>!isNaN(v));
+    scatterScales = {
+      abMax  : _ab.length ? Math.ceil(Math.max(..._ab) * 1.05) : 20,
+      tempMin: _tp.length ? Math.floor(Math.min(..._tp)) - 1   : 0,
+      tempMax: _tp.length ? Math.ceil(Math.max(..._tp))  + 1   : 40,
+      humMin : _hm.length ? Math.floor(Math.min(..._hm)) - 1   : 0,
+      humMax : _hm.length ? Math.ceil(Math.max(..._hm))  + 1   : 100,
+    };
     
     setEl('h-weeks', weeks.length);
     const sl = document.getElementById('time-slider');
@@ -424,7 +506,7 @@ async function initDashboard(){
     hideLoading();
   } catch(e) { showError(e.message); console.error(e); }
 }
-
+ 
 function loadGlobalStatsAndTrends(){
   try {
     const stats = weeks.map(w => {
@@ -439,13 +521,20 @@ function loadGlobalStatsAndTrends(){
     });
     const recentStats = stats.slice(-30);
     if(recentStats.length){
-      buildTrendChart(recentStats);
-      buildTempAbChart(recentStats);
-      buildClimateChart(recentStats);
+      // Échelles partagées calculées une seule fois sur les mêmes données
+      const abVals=recentStats.map(s=>s.mean_ab).filter(v=>!isNaN(v));
+      const abMax=abVals.length?Math.ceil(Math.max(...abVals)*1.15):20;
+      const tempVals=recentStats.map(s=>s.mean_temp).filter(v=>!isNaN(v));
+      const tempMin=tempVals.length?Math.floor(Math.min(...tempVals)*0.95):0;
+      const tempMax=tempVals.length?Math.ceil(Math.max(...tempVals)*1.05):40;
+      buildTrendChart(recentStats, abMax);
+      buildTempAbChart(recentStats, abMax, tempMin, tempMax);
+      buildClimateChart(recentStats, tempMin, tempMax);
+      buildStackedRiskChart();
     }
   } catch(e) { console.error("Erreur stats", e); }
 }
-
+ 
 async function loadWeek(idx){
   const week=weeks[idx];
   setEl('current-date',fmtDate(week)); setEl('week-info','Sem. '+(idx+1)+' / '+weeks.length);
@@ -458,13 +547,15 @@ async function loadWeek(idx){
          mean_temperature: parseFloat(p[C.temp]),
          mean_humidity: parseFloat(p[C.hum]),
          mean_rainfall: parseFloat(p[C.rain]),
-         dep: p[C.dep]
+         dep: p[C.dep],
+         population: p.population||null,
+         superficie_km2: p.superficie_km2||null
        }
     }));
-
+ 
     const top10 = [...statsFeatures].map(f=>f.properties).sort((a,b)=>b.mean_abundance_albopictus - a.mean_abundance_albopictus).slice(0,10);
     const top5Codes = top10.slice(0,5).map(p=>p.code);
-
+ 
     renderMap(statsFeatures);
     renderStats(statsFeatures);
     buildScatterCharts(statsFeatures);
@@ -475,12 +566,12 @@ async function loadWeek(idx){
     
   } catch(e) { console.error(e); }
 }
-
+ 
 function renderMap(statsFeatures){
   const cfg=VARS[curVar];
   const statByCode = {};
   statsFeatures.forEach(f => statByCode[f.properties.code] = f.properties);
-
+ 
   const mapData = {
     type:'FeatureCollection',
     features: baseGeoJSON.features.map(f => {
@@ -494,26 +585,32 @@ function renderMap(statsFeatures){
              mean_abundance_albopictus: stat.mean_abundance_albopictus||null,
              mean_temperature: stat.mean_temperature||null,
              mean_humidity: stat.mean_humidity||null,
-             mean_rainfall: stat.mean_rainfall||null
+             mean_rainfall: stat.mean_rainfall||null,
+             population: stat.population||null,
+             superficie_km2: stat.superficie_km2||null
          }
        };
     })
   };
-
+ 
+  const isAbund = curVar==='abundance';
+  if(isAbund && abundScale!=='raw') calcRegBreaks(statsFeatures);
+  const activeCfg = isAbund ? getActiveCfg(cfg) : cfg;
   const col = cfg.col==='abund'?'mean_abundance_albopictus':(cfg.col==='temp'?'mean_temperature':(cfg.col==='rain'?'mean_rainfall':'mean_humidity'));
-  document.getElementById('legend-bar').style.background=cfg.grad;
-  setEl('leg-min',cfg.breaks[0]);setEl('leg-mid',cfg.breaks[2]);setEl('leg-max','>'+cfg.breaks[4]);setEl('legend-label',cfg.label);
-  
+  document.getElementById('legend-bar').style.background=activeCfg.grad;
+  const fmt3=v=>typeof v==='number'?v<0.001?v.toExponential(1):v<10?v.toFixed(3):v.toFixed(1):v;
+  setEl('leg-min',fmt3(activeCfg.breaks[0]));setEl('leg-mid',fmt3(activeCfg.breaks[2]));setEl('leg-max','>'+fmt3(activeCfg.breaks[4]));setEl('legend-label',activeCfg.label);
+ 
   if(geoLayer)map.removeLayer(geoLayer);
   geoLayer=L.geoJSON(mapData,{
-    style:f=>{const v=parseFloat(f.properties[col]);return{fillColor:gk(v,cfg),weight:0.6,color:'#fff',opacity:1,fillOpacity:isNaN(v)?0.15:0.75};},
+    style:f=>{const v=isAbund?ABUND_SCALES[abundScale].getValue(f.properties):parseFloat(f.properties[col]);return{fillColor:gk(v,activeCfg),weight:0.6,color:'#fff',opacity:1,fillOpacity:isNaN(v)?0.15:0.75};},
     onEachFeature:(f,layer)=>{layer.on({
       mouseover:e=>{e.target.setStyle({weight:2,color:'#1a5490',fillOpacity:.9});showTooltip(f,e.latlng);},
       mouseout:e=>{geoLayer.resetStyle(e.target);map.closePopup();}
     });}
   }).addTo(map);
 }
-
+ 
 function renderStats(statsFeatures){
   const valsAb = statsFeatures.map(f=>parseFloat(f.properties.mean_abundance_albopictus)).filter(v=>!isNaN(v));
   if(valsAb.length){
@@ -534,7 +631,7 @@ function renderStats(statsFeatures){
     prevWeekVals=valsAb;
   }
 }
-
+ 
 function updateRisk(score){
   const bars=document.querySelectorAll('.risk-meter .risk-bar');
   const cls=['active-low','active-med','active-high','active-vhigh'],lbl=['Faible','Modéré','Élevé','Très élevé'];
@@ -542,74 +639,239 @@ function updateRisk(score){
   bars.forEach((b,i)=>{b.className='risk-bar '+(i<=lvl?cls[i]:'');});
   setEl('risk-label',lbl[lvl]+' ('+Math.round(score*100)+'%)');
 }
-
+ 
 function showTooltip(f,latlng){
   const p=f.properties,cfg=VARS[curVar];
+  const isAbundTip=curVar==='abundance';
+  const activeCfgTip=isAbundTip?getActiveCfg(cfg):cfg;
   const colMap={abund:'mean_abundance_albopictus',temp:'mean_temperature',rain:'mean_rainfall',hum:'mean_humidity'};
-  const v=parseFloat(p[colMap[cfg.col]]);
+  const v=isAbundTip?ABUND_SCALES[abundScale].getValue(p):parseFloat(p[colMap[cfg.col]]);
   L.popup({closeButton:false,offset:[0,-5],maxWidth:240}).setLatLng(latlng).setContent(
     '<div class="info-popup"><div class="popup-title">'+( p.nom||p.code||'—')+'</div>'+
-    '<div class="popup-row"><span>'+cfg.label+'</span><strong>'+(isNaN(v)?'N/D':v.toFixed(2)+' '+cfg.unit)+'</strong></div>'+
+    '<div class="popup-row"><span>'+activeCfgTip.label+'</span><strong>'+(isNaN(v)?'N/D':v.toFixed(3)+' '+activeCfgTip.unit)+'</strong></div>'+
+    (isAbundTip&&abundScale!=='raw'?'<div class="popup-row"><span>Brute</span><strong>'+fmt(p.mean_abundance_albopictus,' ind/piège')+'</strong></div>':'')+
     '<div class="popup-row"><span>Température</span><strong>'+fmt(p.mean_temperature,'°C')+'</strong></div>'+
     '<div class="popup-row"><span>Humidité</span><strong>'+fmt(p.mean_humidity,'%')+'</strong></div>'+
     '<div class="popup-row"><span>Pluie</span><strong>'+fmt(p.mean_rainfall,'mm')+'</strong></div></div>'
   ).openOn(map);
 }
-
+ 
+function toggleScatterScale(){
+  scatterFixedScale = !scatterFixedScale;
+  const btn = document.getElementById('scale-toggle-btn');
+  btn.textContent = scatterFixedScale ? '📐 Échelle fixe' : '🔀 Échelle adaptative';
+  btn.style.background = scatterFixedScale ? 'rgba(26,84,144,.1)' : 'var(--surface)';
+  btn.style.borderColor = scatterFixedScale ? 'var(--accent)' : 'var(--border)';
+  btn.style.color = scatterFixedScale ? 'var(--accent)' : 'var(--text-muted)';
+  // Reconstruire les scatter avec la nouvelle config
+  const week = weeks[weekIdx];
+  const features = cachedWfsData.filter(p=>(p[C.date]||'').substring(0,10)===week).map(p=>({
+    type:'Feature',geometry:null,properties:{
+      code:p[C.codgeo],nom:p[C.libgeo],codgeo:p[C.codgeo],libgeo:p[C.libgeo],
+      mean_abundance_albopictus:parseFloat(p[C.abund]),
+      mean_temperature:parseFloat(p[C.temp]),
+      mean_humidity:parseFloat(p[C.hum]),
+      mean_rainfall:parseFloat(p[C.rain])
+    }
+  }));
+  buildScatterCharts(features);
+}
+ 
+function zoomToCode(code){
+  if(!baseGeoJSON||!code)return;
+  const feat=baseGeoJSON.features.find(f=>f.properties.code===code);
+  if(!feat)return;
+  map.fitBounds(L.geoJSON(feat).getBounds(),{padding:[40,40],maxZoom:13});
+}
+ 
 function buildScatterCharts(features){
-  const pts1=features.map(f=>({x:parseFloat(f.properties.mean_temperature),y:parseFloat(f.properties.mean_abundance_albopictus)})).filter(p=>!isNaN(p.x)&&!isNaN(p.y));
+  const pts1=features.map(f=>({
+    x:parseFloat(f.properties.mean_temperature),
+    y:parseFloat(f.properties.mean_abundance_albopictus),
+    code:f.properties.codgeo||f.properties.code,
+    nom:f.properties.nom||f.properties.libgeo||''
+  })).filter(p=>!isNaN(p.x)&&!isNaN(p.y));
+ 
+  const pts2=features.map(f=>({
+    x:parseFloat(f.properties.mean_humidity),
+    y:parseFloat(f.properties.mean_abundance_albopictus),
+    code:f.properties.codgeo||f.properties.code,
+    nom:f.properties.nom||f.properties.libgeo||''
+  })).filter(p=>!isNaN(p.x)&&!isNaN(p.y));
+ 
+  const fixed = scatterFixedScale;
+  const yAbScale = {
+    min: 0,
+    ...(fixed ? {max: scatterScales.abMax} : {}),
+    ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'},
+    title:{display:true,text:'Abondance (ind/trap)',color:'#64748b',font:{size:9}}
+  };
+ 
   destroyChart('chart-scatter');
   charts['chart-scatter']=new Chart(document.getElementById('chart-scatter'),{type:'scatter',
-    data:{datasets:[{data:pts1,backgroundColor:'rgba(239,68,68,0.5)',borderColor:'#ef4444',pointRadius:3}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-    scales:{x:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'},title:{display:true,text:'Température (°C)',color:'#64748b',font:{size:9}}},
-            y:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'},title:{display:true,text:'Abondance (ind/trap)',color:'#64748b',font:{size:9}}}}}});
-  
-  const pts2=features.map(f=>({x:parseFloat(f.properties.mean_humidity),y:parseFloat(f.properties.mean_abundance_albopictus)})).filter(p=>!isNaN(p.x)&&!isNaN(p.y));
+    data:{datasets:[{data:pts1,backgroundColor:'rgba(239,68,68,0.5)',borderColor:'#ef4444',pointRadius:3,pointHoverRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>(c.raw.nom||c.raw.code||'')+(` — T: ${c.raw.x.toFixed(1)}°C, Ab: ${c.raw.y.toFixed(1)}`)}}},
+      onClick:(_,els)=>{if(els.length)zoomToCode(pts1[els[0].index].code);},
+      scales:{
+        x:{...(fixed?{min:scatterScales.tempMin,max:scatterScales.tempMax}:{}),ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'},title:{display:true,text:'Température (°C)',color:'#64748b',font:{size:9}}},
+        y:yAbScale}}});
+ 
   destroyChart('chart-scatter2');
   charts['chart-scatter2']=new Chart(document.getElementById('chart-scatter2'),{type:'scatter',
-    data:{datasets:[{data:pts2,backgroundColor:'#6366f166',borderColor:'#6366f1',pointRadius:3}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-    scales:{x:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'},title:{display:true,text:'Humidité (%)',color:'#64748b',font:{size:9}}},
-            y:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'},title:{display:true,text:'Abondance (ind/trap)',color:'#64748b',font:{size:9}}}}}});
-  buildCorrBubble(features);
+    data:{datasets:[{data:pts2,backgroundColor:'#6366f166',borderColor:'#6366f1',pointRadius:3,pointHoverRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>(c.raw.nom||c.raw.code||'')+(` — Hum: ${c.raw.x.toFixed(1)}%, Ab: ${c.raw.y.toFixed(1)}`)}}},
+      onClick:(_,els)=>{if(els.length)zoomToCode(pts2[els[0].index].code);},
+      scales:{
+        x:{...(fixed?{min:scatterScales.humMin,max:scatterScales.humMax}:{}),ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'},title:{display:true,text:'Humidité (%)',color:'#64748b',font:{size:9}}},
+        y:yAbScale}}});
+  buildShapChart(features);
 }
-
-function buildCorrBubble(features){
-  const vars=['mean_abundance_albopictus','mean_temperature','mean_rainfall','mean_humidity'],labels=['Abond.','Temp.','Pluie','Humid.'],pairs=[];
-  for(let i=0;i<4;i++)for(let j=0;j<4;j++){
-    const xs=features.map(f=>parseFloat(f.properties[vars[i]])).filter(v=>!isNaN(v));
-    const ys=features.map(f=>parseFloat(f.properties[vars[j]])).filter(v=>!isNaN(v));
-    const n=Math.min(xs.length,ys.length),corr=n<2?0:pearson(xs.slice(0,n),ys.slice(0,n));
-    pairs.push({x:j,y:i,r:Math.abs(corr)*18+4,corr});
-  }
-  destroyChart('chart-bubble');
-  charts['chart-bubble']=new Chart(document.getElementById('chart-bubble'),{type:'bubble',
-    data:{datasets:[{data:pairs.map(p=>({x:p.x,y:p.y,r:p.r,corr:p.corr})),
-      backgroundColor:pairs.map(p=>p.corr>0?'rgba(0,212,255,'+(Math.abs(p.corr)*.7+.1)+')':'rgba(239,68,68,'+(Math.abs(p.corr)*.7+.1)+')'),borderColor:'transparent'}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'r = '+c.raw.corr.toFixed(2)}}},
-    scales:{x:{type:'linear',min:-.5,max:3.5,ticks:{callback:i=>labels[Math.round(i)]||'',color:'#475569',font:{size:11},stepSize:1},grid:{color:'#e8eef5'}},
-            y:{type:'linear',min:-.5,max:3.5,reverse:true,ticks:{callback:i=>labels[Math.round(i)]||'',color:'#475569',font:{size:11},stepSize:1},grid:{color:'#e8eef5'}}}}});
+ 
+function buildShapChart(features){
+  // Proxy SHAP : corrélation de Pearson de chaque variable prédicatrice avec l'abondance,
+  // pondérée par la variance normalisée de la variable (std / mean)
+  const predVars=[
+    {col:'mean_temperature', label:'Température'},
+    {col:'mean_rainfall',    label:'Précipitations'},
+    {col:'mean_humidity',    label:'Humidité'}
+  ];
+  const abund=features.map(f=>parseFloat(f.properties['mean_abundance_albopictus'])).filter(v=>!isNaN(v));
+  const items=predVars.map(v=>{
+    const xs=features.map(f=>parseFloat(f.properties[v.col])).filter(v=>!isNaN(v));
+    const n=Math.min(xs.length,abund.length);
+    const r=n<2?0:pearson(xs.slice(0,n),abund.slice(0,n));
+    const m=mean(xs),sd=Math.sqrt(xs.reduce((s,x)=>(s+(x-m)**2),0)/xs.length);
+    const cv=m>0?sd/m:0;
+    return{label:v.label, shap:r*(cv||1), r};
+  });
+  // Trier par |shap| décroissant
+  items.sort((a,b)=>Math.abs(b.shap)-Math.abs(a.shap));
+  const maxAbs=Math.max(...items.map(i=>Math.abs(i.shap)),0.01);
+ 
+  destroyChart('chart-shap');
+  charts['chart-shap']=new Chart(document.getElementById('chart-shap'),{
+    type:'bar',
+    data:{
+      labels:items.map(i=>i.label),
+      datasets:[{
+        data:items.map(i=>i.shap),
+        backgroundColor:items.map(i=>i.shap>=0?'rgba(239,68,68,0.75)':'rgba(59,125,216,0.75)'),
+        borderColor:items.map(i=>i.shap>=0?'#ef4444':'#3b7dd8'),
+        borderWidth:1,
+        borderRadius:4,
+        barThickness:22
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:c=>`SHAP proxy: ${c.raw.toFixed(3)}  (r=${items[c.dataIndex].r.toFixed(2)})`}}
+      },
+      scales:{
+        x:{min:-maxAbs*1.1,max:maxAbs*1.1,
+           ticks:{color:'#64748b',font:{size:9},maxTicksLimit:5},
+           grid:{color:'#e8eef5'},
+           title:{display:true,text:'Contribution normalisée',color:'#64748b',font:{size:9}}},
+        y:{ticks:{color:'#1e293b',font:{size:11,weight:'600'}},grid:{display:false}}
+      }
+    }
+  });
 }
 function buildRankList(features){
   const sorted=[...features].map(f=>({name:(f.properties.nom||f.properties.code||'?').slice(0,16),val:parseFloat(f.properties.mean_abundance_albopictus)||0})).sort((a,b)=>b.val-a.val).slice(0,10);
   const list=document.getElementById('dep-rank-list'),maxV=sorted[0]?.val||1;
   list.innerHTML=sorted.slice(0,10).map((d,i)=>'<div class="dep-row"><div class="dep-rank-num">'+(i+1)+'</div><div class="dep-name">'+d.name+'</div><div class="dep-bar-wrap"><div class="dep-bar-fill" style="width:'+((d.val/maxV*100).toFixed(0))+'%"></div></div><div class="dep-val">'+d.val.toFixed(1)+'</div></div>').join('');
 }
-function buildTrendChart(stats){
-  const labels=stats.map(s=>(s.date_semaine||'').substring(5));
-  const series=stats.map(s=>parseFloat(s.mean_ab));
-  destroyChart('chart-trend');
-  charts['chart-trend']=new Chart(document.getElementById('chart-trend'),{type:'line',
-    data:{labels,datasets:[{data:series,borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,.08)',fill:true,tension:.4,pointRadius:1.5,borderWidth:2}]},
-    options:{responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{display:false},annotation:{annotations:{
-      lineModere:{type:'line',yMin:3,yMax:3,borderColor:'#f59e0b',borderWidth:1.5,borderDash:[5,4],label:{content:'Modéré',display:true,position:'end',color:'#f59e0b',font:{size:9},backgroundColor:'transparent',padding:2}},
-      lineEleve:{type:'line',yMin:10,yMax:10,borderColor:'#ef4444',borderWidth:1.5,borderDash:[5,4],label:{content:'Élevé',display:true,position:'end',color:'#ef4444',font:{size:9},backgroundColor:'transparent',padding:2}}
-    }}},
-    scales:{x:{ticks:{color:'#64748b',font:{size:8},maxTicksLimit:10},grid:{color:'#e8eef5'}},y:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'}}}}});
+// ── HELPERS RISQUE ────────────────────────────────────────────────────────────
+function scoreToRisk(v){ return v >= 10 ? 'eleve' : v >= 3 ? 'modere' : 'faible'; }
+const RISK_COLORS = { faible:'#4caf50', modere:'#ff9800', eleve:'#e53935' };
+ 
+function computeWeeklyStats(){
+  return weeks.map(w => {
+    const fw = cachedWfsData.filter(p => (p[C.date]||'').substring(0,10)===w);
+    const abs = fw.map(p=>parseFloat(p[C.abund])).filter(v=>!isNaN(v));
+    const total = abs.length;
+    return {
+      date: w,
+      total,
+      faible: abs.filter(v=>v < 3).length,
+      modere: abs.filter(v=>v >= 3 && v < 10).length,
+      eleve:  abs.filter(v=>v >= 10).length
+    };
+  });
 }
-function buildTempAbChart(stats){
+// ─────────────────────────────────────────────────────────────────────────────
+ 
+function buildTrendChart(stats, abMax){
+  const labels = stats.map(s=>(s.date_semaine||'').substring(5));
+  const series = stats.map(s=>parseFloat(s.mean_ab));
+  destroyChart('chart-trend');
+  charts['chart-trend'] = new Chart(document.getElementById('chart-trend'),{
+    type:'line',
+    data:{labels, datasets:[{
+      data: series,
+      borderColor:'#1a5490',
+      backgroundColor: ctx => {
+        const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 180);
+        g.addColorStop(0,   'rgba(229,57,53,0.35)');
+        g.addColorStop(0.5, 'rgba(255,152,0,0.25)');
+        g.addColorStop(1,   'rgba(76,175,80,0.10)');
+        return g;
+      },
+      fill:true, tension:.4, borderWidth:2, pointRadius:2.5,
+      pointBackgroundColor: series.map(v=>RISK_COLORS[scoreToRisk(v)])
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        annotation:{annotations:{
+          lineModere:{type:'line',yMin:3, yMax:3, borderColor:'#f59e0b',borderWidth:1.5,borderDash:[5,4],
+            label:{content:'Modéré',display:true,position:'end',color:'#f59e0b',font:{size:9},backgroundColor:'transparent',padding:2}},
+          lineEleve: {type:'line',yMin:10,yMax:10,borderColor:'#ef4444',borderWidth:1.5,borderDash:[5,4],
+            label:{content:'Élevé', display:true,position:'end',color:'#ef4444',font:{size:9},backgroundColor:'transparent',padding:2}}
+        }}
+      },
+      scales:{
+        x:{ticks:{color:'#64748b',font:{size:8},maxTicksLimit:10},grid:{color:'#e8eef5'}},
+        y:{min:0,max:abMax,ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'}}
+      }
+    }
+  });
+}
+ 
+function buildStackedRiskChart(){
+  const weeklyStats = computeWeeklyStats().slice(-30);
+  const labels = weeklyStats.map(s=>(s.date||'').substring(5));
+  destroyChart('chart-risk-stack');
+  if(!document.getElementById('chart-risk-stack')) return;
+  charts['chart-risk-stack'] = new Chart(document.getElementById('chart-risk-stack'),{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'Élevé',  data:weeklyStats.map(s=>s.total?(s.eleve /s.total*100).toFixed(1):0), backgroundColor:'rgba(229,57,53,0.65)'},
+        {label:'Modéré', data:weeklyStats.map(s=>s.total?(s.modere/s.total*100).toFixed(1):0), backgroundColor:'rgba(255,152,0,0.65)'},
+        {label:'Faible', data:weeklyStats.map(s=>s.total?(s.faible/s.total*100).toFixed(1):0), backgroundColor:'rgba(76,175,80,0.65)'}
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{color:'#64748b',font:{size:9},boxWidth:10}}},
+      scales:{
+        x:{stacked:true,ticks:{color:'#64748b',font:{size:8},maxTicksLimit:8},grid:{display:false}},
+        y:{stacked:true,min:0,max:100,
+           ticks:{color:'#64748b',font:{size:9},maxTicksLimit:5,callback:v=>v+'%'},
+           grid:{color:'#e8eef5'}}
+      }
+    }
+  });
+}
+function buildTempAbChart(stats, abMax, tempMin, tempMax){
   const labels=stats.map(s=>(s.date_semaine||'').substring(5));
   destroyChart('chart-tempab');
   charts['chart-tempab']=new Chart(document.getElementById('chart-tempab'),{type:'line',
@@ -625,11 +887,11 @@ function buildTempAbChart(stats){
       }}},
     scales:{
       x:{ticks:{color:'#64748b',font:{size:8},maxTicksLimit:8},grid:{color:'#e8eef5'}},
-      yT:{position:'left',ticks:{color:'#f97316',font:{size:9}},grid:{color:'#e8eef5'},title:{display:true,text:'Temp. (°C)',color:'#f97316',font:{size:9}}},
-      yA:{position:'right',ticks:{color:'#00d4ff',font:{size:9}},grid:{display:false},title:{display:true,text:'Abond.',color:'#00d4ff',font:{size:9}},min:0}
+      yT:{position:'left',min:tempMin,max:tempMax,ticks:{color:'#f97316',font:{size:9}},grid:{color:'#e8eef5'},title:{display:true,text:'Temp. (°C)',color:'#f97316',font:{size:9}}},
+      yA:{position:'right',min:0,max:abMax,ticks:{color:'#00d4ff',font:{size:9}},grid:{display:false},title:{display:true,text:'Abond.',color:'#00d4ff',font:{size:9}}}
     }}});
 }
-function buildClimateChart(stats){
+function buildClimateChart(stats, tempMin, tempMax){
   const labels=stats.map(s=>(s.date_semaine||'').substring(5));
   destroyChart('chart-climate');
   charts['chart-climate']=new Chart(document.getElementById('chart-climate'),{type:'line',
@@ -639,7 +901,7 @@ function buildClimateChart(stats){
       {label:'Pluie mm',data:stats.map(s=>parseFloat(s.mean_rain)),borderColor:'#22d3ee',backgroundColor:'rgba(34,211,238,.1)',fill:true,tension:.3,pointRadius:1,borderWidth:1,yAxisID:'yT'}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#64748b',font:{size:8},boxWidth:10}}},
     scales:{x:{ticks:{color:'#64748b',font:{size:8},maxTicksLimit:8},grid:{color:'#e8eef5'}},
-            yT:{position:'left',ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'}},
+            yT:{position:'left',min:tempMin,max:tempMax,ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'}},
             yH:{position:'right',ticks:{color:'#6366f1',font:{size:9}},grid:{display:false}}}}});
 }
 function buildHistogram(features){
@@ -654,7 +916,7 @@ function buildHistogram(features){
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
     scales:{x:{ticks:{color:'#64748b',font:{size:8},maxTicksLimit:6},grid:{color:'#e8eef5'}},y:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'}}}}});
 }
-
+ 
 function buildAlerts(topList){
   const list=document.getElementById('alert-list');
   const items=topList.filter(c=>parseFloat(c.mean_abundance_albopictus)>2).slice(0,9).map(c=>{
@@ -664,7 +926,7 @@ function buildAlerts(topList){
   });
   list.innerHTML=items.length?items.join(''):'<div style="color:var(--text-muted);font-size:11px;text-align:center;padding:20px">Aucune alerte cette semaine</div>';
 }
-
+ 
 function buildTop5Chart(codes){
   if(!cachedWfsData||!weeks.length)return;
   const labels=weeks.map(w=>(w||'').substring(5));
@@ -688,7 +950,7 @@ function buildTop5Chart(codes){
        scales:{x:{ticks:{color:'#64748b',font:{size:8},maxTicksLimit:8},grid:{color:'#e8eef5'}},y:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'}}}}});
   }
 }
-
+ 
 function setVar(btn){document.querySelectorAll('.var-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');curVar=btn.dataset.var;if(weeks.length)loadWeek(weekIdx);}
 function onSlider(v){weekIdx=parseInt(v);loadWeek(weekIdx);}
 function prevWeek(){if(weekIdx>0){weekIdx--;loadWeek(weekIdx);}}
@@ -707,11 +969,63 @@ function switchTab(id){
     if(panes[i])panes[i].classList.toggle('active','tab-'+ids[i]===id);
   });
 }
-
-initMap();initDashboard();
+ 
+// ── CHART MODAL ──────────────────────────────────────────────────────────────
+let modalChart = null;
+ 
+function expandChart(canvasId, title) {
+  const src = charts[canvasId];
+  if (!src) return;
+  document.getElementById('chart-modal-title').textContent = title || canvasId;
+  document.getElementById('chart-modal').classList.remove('hidden');
+ 
+  if (modalChart) { modalChart.destroy(); modalChart = null; }
+  const destCanvas = document.getElementById('chart-modal-canvas');
+  // Copier la config Chart.js source dans le canvas modal
+  const cfg = src.config;
+  modalChart = new Chart(destCanvas, {
+    type: cfg.type,
+    data: JSON.parse(JSON.stringify(cfg.data)),
+    options: Object.assign({}, cfg.options, {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      plugins: Object.assign({}, cfg.options?.plugins, {
+        legend: Object.assign({}, cfg.options?.plugins?.legend, { display: true })
+      })
+    })
+  });
+}
+ 
+function closeChartModal() {
+  document.getElementById('chart-modal').classList.add('hidden');
+  if (modalChart) { modalChart.destroy(); modalChart = null; }
+}
+ 
+// Fermer sur clic backdrop
+document.getElementById('chart-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('chart-modal')) closeChartModal();
+});
+ 
+// Injecter les boutons ⤢ sur tous les chart-box après le chargement
+function injectExpandButtons() {
+  document.querySelectorAll('.chart-box').forEach(box => {
+    const titleEl = box.querySelector('.chart-title');
+    const canvas  = box.querySelector('canvas');
+    if (!titleEl || !canvas) return;
+    const btn = document.createElement('button');
+    btn.className = 'chart-expand-btn';
+    btn.title = 'Agrandir';
+    btn.textContent = '⤢';
+    btn.addEventListener('click', () => expandChart(canvas.id, titleEl.textContent.trim()));
+    titleEl.appendChild(btn);
+  });
+}
+ 
+initMap();initDashboard().finally(()=>injectExpandButtons());
 </script>
-
-
+ 
+ 
 </body>
 </html>
-
+ 
