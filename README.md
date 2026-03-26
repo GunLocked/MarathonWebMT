@@ -1,167 +1,204 @@
-# Visualisation de l'abondance du moustique tigre — Hérault
+# OMEES — Tableau de Bord Surveillance Moustique Tigre (Hérault)
 
-> Projet réalisé dans le cadre du **Marathon du Web**
+## Vue d'ensemble
 
-## Présentation du projet
-
-Ce projet propose une application de visualisation cartographique interactive des données d'abondance du moustique tigre (*Aedes albopictus*) sur le département de l'Hérault. L'application est construite avec **Mviewer**, un visualiseur cartographique open source basé sur OpenLayers, qui permet de superposer et d'interroger des couches de données géographiques issues de plusieurs sources.
-
-L'objectif est de croiser les observations entomologiques avec des données socio-environnementales afin d'identifier les zones à risque et d'en faciliter la lecture pour le grand public comme pour les acteurs de santé publique.
+Cette plateforme web permet la **surveillance et la visualisation** de la présence du moustique tigre (*Aedes albopictus*) dans le département de l'Hérault. Elle est composée de deux interfaces complémentaires et d'un script de préparation des données.
 
 ---
 
-## Données utilisées
-
-### Données principales
-
-| Source | Description | Type |
-|--------|-------------|------|
-| **INRAE — OMEES** | Observations d'*Aedes albopictus* géolocalisées avec dimension temporelle | WMS — `geodata.bac-a-sable.inrae.fr` |
-
-### Données d'enrichissement
-
-| Source | Variable | Intérêt |
-|--------|----------|---------|
-| **Hérault Data** — Stations d'épuration | `capacite_EH` (Équivalent Habitant) | Les stations d'épuration constituent des gîtes larvaires privilégiés ; la capacité EH est un indicateur de la taille du site et de sa surface en eau stagnante |
-| **Données communales** | `pop2022` (population par commune) | Permet de contextualiser la densité d'observations par rapport à la population exposée |
-
----
-
-## Stack technique
-
-- **Mviewer** — visualiseur cartographique (OpenLayers)
-- **GeoServer** — serveur de diffusion des flux WMS (INRAE)
-- **Configuration XML** — paramétrage des couches, thématiques et comportements de l'application
-- **Templates Mustache** — fiches d'information interactives au clic sur une entité
-
----
-
-## Structure du projet
+## Structure des fichiers
 
 ```
 /
-├── apps/
-│   └── moustiques/
-│       ├── config.xml          # Configuration principale Mviewer
-│       └── templates/
-│           └── fiche.mst       # Template Mustache fiche d'info
-└── README.md
+├── index.html                          # Vue citoyen
+├── mosquito_dashboard_regional.html    # Tableau de bord élu
+├── Data/
+│   ├── albo_weekly_herault.json        # Données hebdomadaires (base)
+│   └── albo_weekly_herault_enriched.json  # Avec population + superficie
+├── enrich_json_with_population.py      # Script d'enrichissement
+├── preview.webp                        # Image du popup d'accueil
+└── responsive.css                      # Styles communs
 ```
 
 ---
 
-## Fonctionnalités de la visualisation
+## 1. Vue Citoyen — `index.html`
 
-- Affichage des observations de moustiques tigres sur fond cartographique
-- Filtrage temporel des observations (slider de date)
-- Superposition des stations d'épuration avec taille proportionnelle à la capacité EH
-- Fiche d'information contextuelle au clic : espèce, date, commune, population, capacité EH locale
-- Légende et contrôle d'opacité par couche
+Interface grand public pour consulter le niveau de risque moustique tigre sur la carte de l'Hérault.
 
----
+### Fonctionnalités
 
-## Comprendre l'outil de prédiction
+#### Carte interactive (Leaflet)
+- Carte choroplèthe des communes de l'Hérault colorée selon le niveau d'abondance
+- Trois niveaux de risque : **Faible** (vert), **Modéré** (orange), **Élevé** (rouge)
+- Tooltip au survol affichant abondance, température, humidité et pluviométrie
+- Navigation temporelle semaine par semaine (slider + boutons Préc/Play/Suiv)
 
-Les données visualisées dans l'application sont issues d'un modèle statistique de prédiction de l'activité du moustique tigre. Cette section en explique le fonctionnement.
+#### Modes d'affichage
+| Mode | Données affichées |
+|------|-------------------|
+| Brute | Abondance brute (ind/piège) |
+| Vue risque | Couleurs selon seuils Faible/Modéré/Élevé |
 
-### Variable cible
+#### Recherche de commune
+- Widget de recherche autocomplete (> 2 caractères)
+- Affichage du niveau de risque, tendance (↗ ↘ →) et valeurs de la commune sélectionnée
+- Zoom automatique sur la commune sur la carte
 
-Le modèle cherche à prédire la **ponte moyennée par site et par date de collecte**, exprimée en nombre quotidien d'œufs par piège. Cette mesure est collectée sur le terrain via des ovitraps (pièges à œufs) disposés sur plusieurs sites.
+#### Mode Élu (accès via bouton header)
+Active un panneau latéral droit avec :
+- **KPIs** : nombre de communes en alerte élevée, modérée, abondance moyenne
+- **Onglet Tendances** : évolution temporelle + distribution des risques empilée
+- **Onglet Classement** : top 10 communes par abondance (barres horizontales)
+- **Onglet Alertes** : liste des communes dépassant le seuil modéré
 
-### Deux modèles complémentaires
+#### Popup d'accueil
+- S'ouvre au chargement de la page
+- Présente les 3 gestes de prévention (image preview.webp)
+- Accordéons **S'informer** (vidéo YouTube + liens) et **Agir** (signalement ANSES)
+- Fermeture avec animation de minimisation → **bulle flottante** dans le coin inférieur gauche
+- Clic sur la bulle → réouverture du popup
 
-Pour distinguer les conditions qui *déclenchent* l'activité des moustiques de celles qui en *gouvernent l'intensité*, deux modèles ont été développés en parallèle :
-
-- **Modèle de présence/absence** — répond à la question *"y a-t-il des moustiques actifs ?"*. La variable de sortie est binaire : 1 si des œufs sont détectés, 0 sinon.
-- **Modèle d'abondance** — répond à la question *"combien ?"*. Il prédit le nombre moyen d'œufs par piège et par jour, uniquement pour les événements de piégeage positifs.
-
-### Pipeline de construction du modèle
-
-**Étape 1 — Sélection des variables météorologiques pertinentes**
-
-Des cartes de corrélation croisée (CCM) sont calculées entre la variable cible et chaque variable météorologique (température, précipitations, humidité…), moyennées sur une semaine glissante avec des décalages temporels de 0 à 12 semaines. Cela permet d'identifier avec quel délai chaque facteur météo influence la ponte — par exemple, une pluie intense se répercute sur l'activité des moustiques plusieurs semaines plus tard.
-
-**Étape 2 — Filtrage et sélection**
-
-- Pour chaque variable météo, seul le décalage temporel avec la corrélation la plus forte est conservé.
-- Les variables faiblement associées à la ponte (coefficient de corrélation de distance < 0,1) sont écartées.
-- En cas de redondance entre deux variables très corrélées (Pearson > 0,7), seule celle présentant la meilleure pertinence écologique et interprétabilité est retenue.
-
-**Étape 3 — Entraînement par forêts aléatoires (Random Forest)**
-
-Deux modèles de forêts aléatoires sont entraînés :
-- un **RF de classification binaire** pour la présence/absence,
-- un **RF de régression** pour l'abondance.
-
-Pour éviter le surapprentissage et évaluer la capacité du modèle à généraliser à des sites non observés, une **validation croisée spatiale** est appliquée : les modèles sont entraînés sur trois sites et testés sur le quatrième, de manière itérative.
-
-**Étape 4 — Combinaison des prédictions**
-
-Les deux modèles sont combinés pour produire une **prédiction unifiée** :
-- Si la probabilité de présence dépasse le seuil de 0,5 → la valeur d'abondance prédite est conservée.
-- Sinon → la prédiction est fixée à 0.
-
-Cette approche en deux temps permet d'éviter de surestimer l'abondance dans des conditions où les moustiques seraient tout simplement absents.
+### Modaux informatifs
+- **Comprendre la carte** : explication des 3 niveaux de risque et comment les interpréter
+- **Que puis-je faire ?** : conseils pratiques par niveau de risque
 
 ---
 
-## Compréhension du modèle de prédiction de l'activité des moustiques
+## 2. Tableau de Bord Élu — `mosquito_dashboard_regional.html`
 
-Dans le cadre de ce projet, nous avons travaillé à la **compréhension d'un modèle statistique de prédiction de l'activité du moustique tigre**, développé à partir de données de piégeage par ovitramptes (pièges à œufs). Ce modèle n'a pas été réalisé par notre équipe, mais sa lecture et son interprétation ont guidé nos choix de visualisation.
+Interface avancée pour les élus et gestionnaires, avec visualisations scientifiques et données normalisées.
 
-### Variable cible
+### Architecture de la page
 
-La variable prédite est la **ponte moyennée par site et par date de collecte**, exprimée en nombre quotidien d'œufs par piège.
+Mise en page en 3 colonnes :
+- **Panneau gauche** : contrôles (variable, temps, légende, KPIs, jauge de risque)
+- **Centre** : carte Leaflet interactive
+- **Panneau droit** : graphiques et analyses (4 onglets)
 
-### Deux modèles complémentaires
+### Gestion des échelles cartographiques ⭐
 
-Pour distinguer les facteurs déclenchant l'activité des moustiques de ceux qui en gouvernent l'intensité, deux modèles ont été développés :
+Bouton **🔬 Échelle** dans le header — cycle entre 3 modes :
 
-- **Modèle de présence/absence** — réponse binaire (1 = œufs détectés, 0 = absence), visant à identifier les conditions météorologiques permettant l'activité des moustiques
-- **Modèle d'abondance** — réponse continue (nombre moyen d'œufs par piège et par jour, sur les seuls événements positifs), visant à prédire l'intensité de la ponte
+| Bouton | Échelle | Calcul | Données requises |
+|--------|---------|--------|-----------------|
+| 🔬 Brute | ind/piège | Valeur brute | Aucune |
+| 🗺 /km² | ind/km² | abondance ÷ superficie | `superficie_km2` |
+| 👤 /hab. | ind/1000hab | (abondance × 1000) ÷ population | `population` |
 
-### Pipeline de modélisation
+Les seuils colorimétiques des modes /km² et /hab. sont **calculés dynamiquement** par percentiles (P20–P80) pour garantir un contraste visuel optimal quelle que soit la semaine.
 
-**Étape 1 — Sélection des variables météorologiques**
+### Variables cartographiables
 
-Des cartes de corrélation croisée (CCM) ont été calculées entre la variable réponse et chaque variable météorologique moyennée sur une semaine, avec des décalages temporels de 0 à 12 semaines. Les CCM permettent d'évaluer les associations entre deux séries temporelles qui peuvent être décalées dans le temps — par exemple, une forte chaleur une semaine N peut n'influencer la ponte qu'en semaine N+3.
+| Variable | Palette | Seuils |
+|----------|---------|--------|
+| 🦟 Abondance | Vert → Rouge | 0 / 2 / 5 / 10 / 20 |
+| 🌡️ Température | Bleu → Rouge | 0 / 10 / 15 / 20 / 30°C |
+| 🌧️ Pluie | Blanc → Bleu foncé | 0 / 10 / 25 / 50 / 100mm |
+| 💧 Humidité | Crème → Brun | 40 / 55 / 65 / 75 / 90% |
 
-**Étape 2 — Sélection du décalage optimal**
+### Onglets du panneau droit
 
-Pour chaque variable météorologique, le décalage (en semaines) présentant la corrélation la plus forte avec la variable réponse a été retenu.
+#### Bivariée
+- **Scatter Température × Abondance** : corrélation visuelle entre chaleur et densité de moustiques
+- **Scatter Humidité × Abondance** : impact de l'humidité
+- **SHAP proxy** : importance relative de chaque variable climatique (température, pluie, humidité) sur l'abondance — calculé par corrélation de Pearson pondérée par le coefficient de variation
+- Toggle **📐 Échelle fixe / 🔀 Adaptative** : axes fixes sur toutes les semaines vs. adaptation automatique
 
-**Étape 3 — Filtrage et gestion de la colinéarité**
+#### Classement
+- Top 10 communes par abondance avec barres de progression
 
-- Les variables avec une association trop faible (coefficient de corrélation de distance < 0,1) ont été écartées
-- En cas de colinéarité forte entre deux variables (corrélation de Pearson > 0,7), seule la plus pertinente écologiquement a été conservée
+#### Tendances ⭐
+- **Évolution abondance** : courbe avec dégradé rouge→vert selon le niveau de risque, points colorés par commune, lignes de seuil Modéré (3) et Élevé (10)
+- **Distribution des risques (empilé)** : % de communes Faible/Modéré/Élevé par semaine sur les 30 dernières semaines
+- **Température × Abondance (dual axis)** : deux séries sur deux axes Y avec lignes de seuil
+- **Profil climatique** : température, humidité et pluie sur une même fenêtre temporelle
+- **Distribution (histogramme)** : répartition statistique des valeurs d'abondance
 
-**Étape 4 — Entraînement par forêts aléatoires (Random Forest)**
+#### Alertes
+- Liste des communes dépassant le seuil modéré (abondance ≥ 2) avec code couleur
+- **Séries temporelles top 5** : évolution des 5 communes les plus touchées sur la période
 
-Deux modèles Random Forest ont été entraînés :
-- Un **RF de classification binaire** pour la présence/absence
-- Un **RF de régression** pour l'abondance
+### Fonctionnalités supplémentaires
+- **⤢ Expansion** : clic sur l'icône en haut à droite de chaque graphique → affichage plein écran dans un modal
+- **Export CSV** (mode élu de index.html) : export des données de la semaine courante
 
-Pour éviter le surapprentissage et tester la capacité de généralisation à des sites non observés, une **validation croisée spatiale** a été appliquée : les modèles sont entraînés sur 3 sites et testés sur le 4ème, itérativement.
+---
 
-**Étape 5 — Combinaison des prédictions**
+## 3. Script d'enrichissement — `enrich_json_with_population.py`
 
-Les deux modèles sont combinés en une prédiction unifiée :
-- Si la **probabilité de présence** dépasse le seuil de 0,5 → la valeur du modèle d'abondance est conservée
-- Sinon → la prédiction est fixée à **0**
+Prépare le fichier JSON de données pour activer les échelles /km² et /hab.
 
+### Utilisation
+
+```bash
+python enrich_json_with_population.py \
+    --csv  albopictus_climate_suitability_weekly.csv \
+    --json albo_weekly_herault.json \
+    --out  albo_weekly_herault_enriched.json
 ```
-Probabilité présence > 0.5  →  valeur abondance prédite
-Probabilité présence ≤ 0.5  →  0 (absence)
-```
 
-### Apport pour notre visualisation
+### Ce que fait le script
+1. Lit le CSV source et extrait `P22_POP` et `SUPERFICIE_KM2` par `codgeo`
+2. Joint ces données à chaque commune du JSON via `codgeo`
+3. Ajoute deux champs à chaque entrée : `population` (float | null) et `superficie_km2` (float | null)
+4. Conserve intégralement les champs existants : `libgeo`, `dep`, `codgeo`, `weeks`
 
-La compréhension de ce pipeline nous a permis de contextualiser les variables météorologiques et environnementales à afficher en priorité dans Mviewer, et d'interpréter correctement les variations temporelles et spatiales des observations.
+### Source des données
+| Champ JSON | Colonne CSV | Description |
+|-----------|------------|-------------|
+| `population` | `P22_POP` | Population communale 2022 (INSEE) |
+| `superficie_km2` | `SUPERFICIE_KM2` | Surface de la commune en km² |
 
 ---
 
-## Sources et licences
+## 4. Format des données
 
-- Données OMEES / INRAE — usage dans le cadre du Marathon du Web
-- [Stations d'épuration — Hérault Data](https://www.herault-data.fr/explore/dataset/stations-epuration-lherault/) — Licence Ouverte v2.0
-- Données population communale — INSEE 2022 — Licence Ouverte v2.0
+### albo_weekly_herault.json (structure de base)
+```json
+[
+  {
+    "libgeo": "Montpellier",
+    "dep": "34",
+    "codgeo": "34172",
+    "population": 295542.0,
+    "superficie_km2": 56.88,
+    "weeks": [
+      {
+        "date": "2023-05-01",
+        "date_fin": "2023-05-07",
+        "abundance": 4.2,
+        "sd_abundance": 1.1,
+        "temperature": 18.5,
+        "rainfall": 12.3,
+        "humidity": 65.0
+      }
+    ]
+  }
+]
+```
+
+---
+
+## 5. Dépendances externes
+
+| Bibliothèque | Version | Usage |
+|-------------|---------|-------|
+| Leaflet | 1.9.4 | Carte interactive |
+| Chart.js | 4.4.0 | Graphiques |
+| chartjs-plugin-annotation | 3.0.1 | Lignes de seuil sur les graphiques |
+| CartoDB Basemaps | — | Fond de carte |
+| geo.api.gouv.fr | — | Contours communaux (API) |
+
+---
+
+## 6. Configuration rapide
+
+1. Placer les fichiers sur un serveur web (local ou distant)
+2. Générer le JSON enrichi avec le script Python
+3. Mettre à jour le chemin dans `initDashboard()` si nécessaire : `fetch('Data/albo_weekly_herault_enriched.json')`
+4. Pour la bulle du popup : remplacer 🦟 dans `#welcome-bubble` par `<img src="votre_image.png">`
+
+---
+
+*OMEES — Observatoire du Moustique et des Espèces Envahissantes — Hérault (34)*
