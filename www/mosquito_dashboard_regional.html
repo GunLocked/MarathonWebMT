@@ -419,6 +419,7 @@ function cycleAbundScale(){
 let weeks=[], weekIdx=0, curVar='abundance', geoLayer=null, playTimer=null, map, curDep='34', prevWeekVals=null;
 let baseGeoJSON = null;
 let cachedWfsData = [];
+let communeProps = {}; // Mappe codgeo -> {população, superficie_km2}
 let scatterScales = {};       // plages fixes calculées sur toutes les semaines
 let scatterFixedScale = true; // true = axes fixes, false = adaptatif
 const charts={};
@@ -463,7 +464,9 @@ async function initDashboard(){
  
     // Aplatir la structure groupée → tableau plat compatible avec le reste du code
     cachedWfsData = [];
+    communeProps = {};
     for(const commune of grouped){
+      communeProps[commune.codgeo] = {population: commune.population, superficie_km2: commune.superficie_km2};
       for(const w of commune.weeks){
         cachedWfsData.push({
           codgeo: commune.codgeo,
@@ -576,6 +579,7 @@ function renderMap(statsFeatures){
     type:'FeatureCollection',
     features: baseGeoJSON.features.map(f => {
        const stat = statByCode[f.properties.code] || {};
+       const props = communeProps[f.properties.code] || {};
        return {
          type:'Feature',
          geometry: f.geometry,
@@ -586,8 +590,8 @@ function renderMap(statsFeatures){
              mean_temperature: stat.mean_temperature||null,
              mean_humidity: stat.mean_humidity||null,
              mean_rainfall: stat.mean_rainfall||null,
-             population: stat.population||null,
-             superficie_km2: stat.superficie_km2||null
+             population: props.population||null,
+             superficie_km2: props.superficie_km2||null
          }
        };
     })
