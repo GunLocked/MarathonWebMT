@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moustique Tigre — Alerte et Surveillance</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="responsive.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6f8; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+/* HEADER */
+header {
+  background: #1a5490;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  height: 52px;
+  flex-shrink: 0;
+  gap: 10px;
+  z-index: 1000;
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+}
+.header-logo {
+  width: 34px; height: 34px; background: #fff;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.header-logo svg { width: 22px; height: 22px; }
+.header-title {
+  font-size: 15px; font-weight: 600; flex: 1;
+}
+.header-title span { font-weight: 300; }
+.header-btns { display: flex; gap: 8px; }
+.hbtn {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.35);
+  color: #fff; border-radius: 6px; padding: 5px 12px;
+  font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px;
+  transition: background .15s;
+}
+.hbtn:hover { background: rgba(255,255,255,0.28); }
+.hbtn.active { background: #fff; color: #1a5490; font-weight: 600; }
+
+/* MAIN LAYOUT */
+#main { flex: 1; position: relative; overflow: hidden; display: flex; }
+
+/* MAP */
+#map { flex: 1; z-index: 1; }
+
+/* LEGEND */
+#legend {
+  position: absolute; bottom: 12px; right: 12px; z-index: 500;
+  background: #fff; border-radius: 8px; padding: 10px 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.18); font-size: 13px;
+  min-width: 110px;
+  transition: right .3s;
+}
+#legend.elu-shift { right: 312px; }
+.legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.legend-item:last-child { margin-bottom: 0; }
+.legend-dot { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+.legend-dot.faible  { background: #4caf50; }
+.legend-dot.modere  { background: #ff9800; }
+.legend-dot.eleve   { background: #e53935; }
+
+/* TIME NAV WIDGET */
+#time-nav-widget {
+  position: absolute; top: 60px; left: 12px; z-index: 500;
+  background: #fff; border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.2);
+  padding: 10px 14px; min-width: 210px;
+  font-size: 12px;
+}
+.tn-label { font-size: 9px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.tn-date-display { font-size: 13px; color: #1a5490; text-align: center; font-weight: 600; margin-bottom: 2px; }
+.tn-week-info { font-size: 9px; color: #aaa; text-align: center; margin-bottom: 8px; }
+#tn-slider { width: 100%; accent-color: #1a5490; cursor: pointer; height: 4px; margin-bottom: 8px; display: block; }
+.tn-nav { display: flex; gap: 6px; }
+.tn-nav .tnbtn {
+  background: #f5f7fa; border: 1px solid #ddd; color: #555;
+  border-radius: 6px; padding: 4px 0; font-size: 11px;
+  cursor: pointer; flex: 1; text-align: center; transition: all .15s;
+}
+.tn-nav .tnbtn:hover { border-color: #1a5490; color: #1a5490; }
+.tn-nav .tnbtn.active { background: #1a5490; border-color: #1a5490; color: #fff; }
+
+/* BOTTOM BAR (citoyen) */
+#bottom-bar {
+  position: absolute; bottom: 52px; left: 50%; transform: translateX(-50%);
+  z-index: 500; background: #fff; border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.2);
+  padding: 10px 18px; display: flex; align-items: center; gap: 14px;
+  font-size: 13px; font-weight: 600; color: #333; white-space: nowrap;
+}
+#bottom-risk-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+#bottom-bar .btn-link {
+  background: #1a5490; color: #fff; border: none; border-radius: 6px;
+  padding: 5px 12px; font-size: 12px; cursor: pointer;
+}
+
+#bottom-actions {
+  position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+  z-index: 500; display: flex; gap: 10px;
+}
+#bottom-actions button {
+  border: none; border-radius: 8px; padding: 7px 18px; font-size: 13px;
+  font-weight: 600; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.18);
+}
+#btn-comprendre { background: #1a5490; color: #fff; }
+#btn-quefaire   { background: #4a7c3f; color: #fff; }
+
+/* PANEL ÉLU */
+#panel-elu {
+  position: absolute; top: 0; right: 0; bottom: 0; z-index: 500;
+  background: #fff; padding: 14px 12px;
+  box-shadow: -3px 0 12px rgba(0,0,0,.15); width: 300px;
+  font-size: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+}
+
+/* KPIs élus */
+.elu-kpis { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+.elu-kpi { background: #f5f7fa; border-radius: 7px; padding: 8px 6px; text-align: center; border-top: 3px solid #1a5490; }
+.elu-kpi.orange { border-color: #ff9800; }
+.elu-kpi.red    { border-color: #e53935; }
+.elu-kpi-val { font-size: 18px; font-weight: 700; color: #1e293b; }
+.elu-kpi-lbl { font-size: 9px; color: #888; margin-top: 2px; }
+
+/* Tabs élus */
+.elu-tabs { display: flex; gap: 4px; }
+.elu-tab {
+  flex: 1; border: 1px solid #ddd; border-radius: 6px;
+  background: #f5f7fa; color: #555; font-size: 10px; font-weight: 600;
+  padding: 5px 4px; cursor: pointer; transition: all .15s; text-align: center;
+}
+.elu-tab:hover { border-color: #1a5490; color: #1a5490; }
+.elu-tab.active { background: #1a5490; color: #fff; border-color: #1a5490; }
+
+/* Tab panes */
+.elu-pane { display: none; flex-direction: column; gap: 10px; }
+.elu-pane.active { display: flex; }
+
+/* Chart titles */
+.elu-chart-title {
+  font-size: 10px; font-weight: 700; color: #475569;
+  text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px;
+}
+
+/* chart-wrap for fixed height charts */
+.chart-wrap { position: relative; }
+.chart-wrap canvas { position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important; }
+
+/* Rank list */
+.elu-rank-row {
+  display: flex; align-items: center; gap: 6px; padding: 5px 6px;
+  border-radius: 6px; background: #f8fafc; border: 1px solid #eee;
+  font-size: 11px; cursor: default;
+}
+.elu-rank-num { font-size: 10px; color: #aaa; width: 14px; text-align: center; }
+.elu-rank-name { flex: 1; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.elu-rank-bar-wrap { width: 50px; height: 4px; background: #e2e8f0; border-radius: 2px; overflow: hidden; }
+.elu-rank-bar { height: 100%; border-radius: 2px; }
+.elu-rank-val { font-weight: 700; color: #1e293b; width: 36px; text-align: right; }
+
+/* Alert items */
+.elu-alert {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 7px 8px; border-radius: 7px; font-size: 11px; border: 1px solid;
+}
+.elu-alert.high { background: #ffebee; border-color: #ffcdd2; color: #b71c1c; }
+.elu-alert.med  { background: #fff3e0; border-color: #ffe0b2; color: #e65100; }
+.elu-alert-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 2px; }
+.elu-alert.high .elu-alert-dot { background: #e53935; }
+.elu-alert.med  .elu-alert-dot { background: #ff9800; }
+
+/* LOADING OVERLAY */
+#loading {
+  position: absolute; inset: 0; z-index: 2000;
+  background: rgba(255,255,255,.88); backdrop-filter: blur(3px);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+}
+.loader {
+  width: 38px; height: 38px; border: 3px solid #dce3ec;
+  border-top-color: #1a5490; border-radius: 50%; animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 13px; color: #555; }
+.error-box {
+  background: #fff3f3; border: 1px solid #f5c6c6; border-radius: 10px;
+  padding: 20px 24px; color: #b71c1c; font-size: 13px; text-align: center; line-height: 2;
+  max-width: 320px;
+}
+.error-box button {
+  background: #1a5490; color: #fff; border: none; border-radius: 6px;
+  padding: 7px 18px; cursor: pointer; font-size: 12px; margin-top: 6px;
+}
+
+/* MODAL BACKDROP */
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 3000;
+  background: rgba(0,0,0,.45); display: flex;
+  align-items: center; justify-content: center;
+}
+.modal-backdrop.hidden { display: none; }
+.modal-box {
+  background: #fff; border-radius: 12px; padding: 22px 24px;
+  max-width: 460px; width: 92%; box-shadow: 0 8px 30px rgba(0,0,0,.25);
+  max-height: 90vh; overflow-y: auto;
+}
+.modal-box h2 {
+  font-size: 16px; color: #1a5490; margin-bottom: 14px;
+  text-align: center; padding-bottom: 10px; border-bottom: 2px solid #e8eef5;
+}
+
+/* FICHE COMMUNE */
+.mc-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px;
+}
+.mc-icon {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0; color: #fff;
+}
+.mc-icon.orange { background: #ff9800; }
+.mc-icon.green  { background: #4caf50; }
+.mc-icon.red    { background: #e53935; }
+.mc-level-badge {
+  font-weight: 700; padding: 2px 10px; border-radius: 20px; font-size: 13px;
+}
+.mc-level-badge.faible { background: #e8f5e9; color: #2e7d32; }
+.mc-level-badge.modere { background: #fff3e0; color: #e65100; }
+.mc-level-badge.eleve  { background: #ffebee; color: #b71c1c; }
+.mc-section { margin-top: 12px; }
+.mc-section h4 { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.mc-section ul { list-style: none; padding: 0; }
+.mc-section li { font-size: 13px; color: #444; padding: 3px 0 3px 14px; position: relative; }
+.mc-section li::before { content: '●'; position: absolute; left: 0; font-size: 8px; top: 6px; color: #ff9800; }
+.mc-section li.green::before { color: #4caf50; }
+.mc-section li.blue::before  { color: #1a5490; }
+.modal-close-btn {
+  display: block; width: 100%; margin-top: 16px;
+  background: #1a5490; color: #fff; border: none; border-radius: 8px;
+  padding: 9px; font-size: 13px; cursor: pointer; font-weight: 600;
+}
+.modal-close-btn.grey { background: #e0e0e0; color: #333; }
+
+/* COMPRENDRE LE RISQUE */
+.risk-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+.risk-col { border-radius: 8px; padding: 12px 10px; text-align: center; }
+.risk-col h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.risk-col p  { font-size: 11px; line-height: 1.5; }
+.risk-col.faible { background: #4caf50; color: #fff; }
+.risk-col.modere { background: #ff9800; color: #fff; }
+.risk-col.eleve  { background: #e53935; color: #fff; }
+.risk-asavoir { background: #f5f7fa; border-radius: 8px; padding: 12px 14px; }
+.risk-asavoir h4 { font-size: 12px; color: #555; margin-bottom: 8px; }
+.risk-asavoir li { font-size: 12px; color: #444; margin-bottom: 4px; list-style: none; padding-left: 14px; position: relative; }
+.risk-asavoir li::before { content: '●'; position: absolute; left: 0; font-size: 8px; top: 5px; color: #4caf50; }
+
+/* QUE FAIRE MODAL */
+.advice-level { border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
+.advice-level h4 { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+.advice-level ul { padding: 0; list-style: none; }
+.advice-level li { font-size: 12px; padding: 3px 0 3px 14px; position: relative; }
+.advice-level li::before { content: '→'; position: absolute; left: 0; color: inherit; }
+.advice-level.faible { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #4caf50; }
+.advice-level.modere { background: #fff3e0; color: #e65100; border-left: 4px solid #ff9800; }
+.advice-level.eleve  { background: #ffebee; color: #b71c1c; border-left: 4px solid #e53935; }
+
+/* MODE ÉLU extras */
+#export-btn {
+  position: absolute; top: 62px; right: 12px; z-index: 500;
+  background: #fff; border: 1px solid #ddd; border-radius: 8px;
+  padding: 7px 14px; font-size: 12px; cursor: pointer; color: #333;
+  box-shadow: 0 2px 6px rgba(0,0,0,.12); display: none; align-items: center; gap: 6px;
+}
+#export-btn:hover { background: #f5f5f5; }
+
+.hidden { display: none !important; }
+
+/* ── SEARCH WIDGET ─────────────────────────────────────── */
+#search-widget {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  z-index: 600; width: 320px;
+  background: #fff; border-radius: 10px;
+  box-shadow: 0 3px 14px rgba(0,0,0,.18);
+  overflow: visible;
+}
+.sw-header {
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid #eef0f3;
+  font-size: 12px; font-weight: 700; color: #1a5490;
+  display: flex; align-items: center; gap: 6px;
+}
+#sw-toggle-btn {
+  margin-left: auto; background: none; border: none; cursor: pointer;
+  color: #aaa; font-size: 16px; line-height: 1; padding: 0 2px;
+  transition: color .15s;
+}
+#sw-toggle-btn:hover { color: #e53935; }
+#sw-body.collapsed { display: none; }
+.sw-input-wrap { padding: 8px 10px; position: relative; }
+#sw-input {
+  width: 100%; border: 1px solid #dde3ea; border-radius: 7px;
+  padding: 7px 12px; font-size: 13px; outline: none; color: #333;
+}
+#sw-input:focus { border-color: #1a5490; }
+#sw-suggestions {
+  position: absolute; top: calc(100% - 4px); left: 10px; right: 10px;
+  background: #fff; border: 1px solid #dde3ea; border-radius: 7px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.12); z-index: 700;
+  max-height: 200px; overflow-y: auto;
+}
+.sw-suggestion {
+  padding: 8px 12px; font-size: 12px; cursor: pointer; color: #333;
+  border-bottom: 1px solid #f0f0f0;
+}
+.sw-suggestion:last-child { border-bottom: none; }
+.sw-suggestion:hover, .sw-suggestion.focused { background: #eef4fb; color: #1a5490; }
+.sw-suggestion b { color: #1a5490; }
+
+/* result card */
+#sw-result {
+  padding: 10px 14px 12px;
+  border-top: 1px solid #eef0f3;
+}
+.sw-result-name { font-size: 13px; font-weight: 700; color: #1a5490; margin-bottom: 8px; }
+.sw-kpis { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.sw-kpi {
+  background: #f5f7fa; border-radius: 6px; padding: 5px 9px;
+  font-size: 11px; flex: 1; min-width: 60px; text-align: center;
+  border-top: 2px solid #dde3ea;
+}
+.sw-kpi.risk-faible { border-color: #4caf50; }
+.sw-kpi.risk-modere { border-color: #ff9800; }
+.sw-kpi.risk-eleve  { border-color: #e53935; }
+.sw-kpi .sw-kpi-val { font-size: 13px; font-weight: 700; color: #1e293b; display: block; }
+.sw-kpi .sw-kpi-lbl { font-size: 9px; color: #888; margin-top: 1px; display: block; }
+.sw-trend { font-size: 11px; color: #555; margin-bottom: 10px; }
+.sw-btn {
+  display: block; width: 100%; text-align: center;
+  background: #1a5490; color: #fff; border: none; border-radius: 7px;
+  padding: 7px; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.sw-btn:hover { background: #16437a; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#1a5490" stroke-width="1.8">
+      <ellipse cx="12" cy="12" rx="5" ry="8" transform="rotate(-20 12 12)"/>
+      <line x1="12" y1="4" x2="8" y2="1"/><line x1="12" y1="4" x2="16" y2="1"/>
+      <line x1="7" y1="10" x2="2" y2="8"/><line x1="17" y1="10" x2="22" y2="8"/>
+      <line x1="7" y1="14" x2="2" y2="16"/><line x1="17" y1="14" x2="22" y2="16"/>
+    </svg>
+  </div>
+  <div class="header-title">Moustique Tigre : <span>Alerte et Surveillance</span></div>
+  <div class="header-btns">
+    <button class="hbtn" id="btn-hinfos" onclick="openModal('modal-risk')">ℹ Infos</button>
+    <a class="hbtn" href="mosquito_dashboard_regional.html">Dashboard élu</a>
+  </div>
+</header>
+
+<div id="main">
+  <div id="map"></div>
+
+  <!-- Navigation temporelle -->
+  <div id="time-nav-widget">
+    <div class="tn-label">Navigation temporelle</div>
+    <div class="tn-date-display" id="tn-current-date">—</div>
+    <div class="tn-week-info" id="tn-week-info">— / —</div>
+    <input type="range" id="tn-slider" min="0" value="0" step="1" oninput="onSlider(this.value)">
+    <div class="tn-nav">
+      <button class="tnbtn" onclick="prevWeek()">◀ Préc</button>
+      <button class="tnbtn active" id="play-btn" onclick="togglePlay()">▶ Play</button>
+      <button class="tnbtn" onclick="nextWeek()">Suiv ▶</button>
+    </div>
+  </div>
+
+  <!-- Widget de recherche commune -->
+  <div id="search-widget">
+    <div class="sw-header">
+      🔍 Rechercher votre commune
+      <button id="sw-toggle-btn" onclick="swToggle()" title="Réduire / Agrandir">×</button>
+    </div>
+    <div id="sw-body">
+      <div class="sw-input-wrap">
+        <input type="text" id="sw-input" placeholder="Ex : Montpellier, Lattes..." autocomplete="off"
+               oninput="swOnInput(this.value)" onkeydown="swOnKey(event)">
+        <div id="sw-suggestions"></div>
+      </div>
+      <div id="sw-result" class="hidden">
+        <div class="sw-result-name" id="sw-rname"></div>
+        <div class="sw-kpis" id="sw-rkpis"></div>
+        <div class="sw-trend" id="sw-rtrend"></div>
+        <button class="sw-btn" id="sw-rbtn">Voir la fiche détaillée</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Légende -->
+  <div id="legend">
+    <div class="legend-item"><span class="legend-dot faible"></span> Faible</div>
+    <div class="legend-item"><span class="legend-dot modere"></span> Modéré</div>
+    <div class="legend-item"><span class="legend-dot eleve"></span> Élevé</div>
+  </div>
+
+  <!-- Barre inférieure mode citoyen -->
+  <div id="bottom-bar">
+    <span id="bottom-risk-dot"></span>
+    <span id="bottom-msg">Chargement...</span>
+    <button class="btn-link" onclick="openModal('modal-risk')">Comprendre la carte</button>
+  </div>
+  <div id="bottom-actions">
+    <button id="btn-comprendre" onclick="openModal('modal-risk')">Comprendre la carte</button>
+    <button id="btn-quefaire" onclick="openModal('modal-advice')">Que puis-je faire ?</button>
+  </div>
+
+  <!-- Panel mode élu -->
+  <div id="panel-elu" class="hidden">
+    <div style="font-size:13px;font-weight:700;color:#1a5490;margin-bottom:4px;border-bottom:2px solid #e8eef5;padding-bottom:8px">
+      Tableau de bord élu — Hérault
+    </div>
+
+    <!-- KPIs -->
+    <div class="elu-kpis">
+      <div class="elu-kpi">
+        <div class="elu-kpi-val" id="elu-nb-eleve">—</div>
+        <div class="elu-kpi-lbl">Communes élevé</div>
+      </div>
+      <div class="elu-kpi orange">
+        <div class="elu-kpi-val" id="elu-nb-modere">—</div>
+        <div class="elu-kpi-lbl">Communes modéré</div>
+      </div>
+      <div class="elu-kpi">
+        <div class="elu-kpi-val" id="elu-mean-ab">—</div>
+        <div class="elu-kpi-lbl">Moy. Hérault</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="elu-tabs">
+      <button class="elu-tab active" onclick="switchEluTab('tendances', this)">Tendances</button>
+      <button class="elu-tab" onclick="switchEluTab('classement', this)">Classement</button>
+      <button class="elu-tab" onclick="switchEluTab('alertes', this)">Alertes</button>
+    </div>
+
+    <!-- Tab : Tendances -->
+    <div class="elu-pane active" id="elu-pane-tendances">
+      <div>
+        <div class="elu-chart-title">Evolution abondance — 30 dernières semaines</div>
+        <div class="chart-wrap" style="height:130px"><canvas id="chart-elu-trend-full"></canvas></div>
+      </div>
+      <div>
+        <div class="elu-chart-title">Répartition du risque par semaine</div>
+        <div class="chart-wrap" style="height:110px"><canvas id="chart-elu-stack"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Tab : Classement -->
+    <div class="elu-pane" id="elu-pane-classement">
+      <div>
+        <div class="elu-chart-title">Top 10 communes — abondance actuelle</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="chart-elu-rank"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Tab : Alertes -->
+    <div class="elu-pane" id="elu-pane-alertes">
+      <div class="elu-chart-title">Communes en alerte — semaine actuelle</div>
+      <div id="elu-alert-list" style="display:flex;flex-direction:column;gap:5px"></div>
+    </div>
+  </div>
+
+  <!-- Chargement -->
+  <div id="loading">
+    <div class="loader"></div>
+    <div class="loading-text" id="loading-text">Chargement des données...</div>
+  </div>
+</div>
+
+<!-- MODAL : Fiche Commune -->
+<div class="modal-backdrop hidden" id="modal-commune">
+  <div class="modal-box">
+    <h2>Votre commune : <span id="mc-name"></span></h2>
+    <div class="mc-row">
+      <span class="mc-icon orange">✏</span>
+      <span>Niveau Actuel : <span class="mc-level-badge" id="mc-level-badge"></span></span>
+    </div>
+    <div class="mc-row">
+      <span class="mc-icon orange" id="mc-trend-icon">↗</span>
+      <span>Tendance : <span id="mc-trend"></span></span>
+    </div>
+    <div class="mc-row">
+      <span class="mc-icon green">◎</span>
+      <span>Mis à jour : <span id="mc-date"></span></span>
+    </div>
+    <div class="mc-section">
+      <h4>Interprétation</h4>
+      <ul><li id="mc-interpretation"></li></ul>
+    </div>
+    <div class="mc-section">
+      <h4>À faire</h4>
+      <ul id="mc-todo"></ul>
+    </div>
+    <div class="mc-section">
+      <h4>À savoir</h4>
+      <ul>
+        <li class="blue">Estimation basée sur les conditions météo</li>
+        <li class="blue">Données actualisées chaque semaine</li>
+      </ul>
+    </div>
+    <button class="modal-close-btn grey" onclick="closeModal('modal-commune')">Fermer</button>
+  </div>
+</div>
+
+<!-- MODAL : Comprendre le Risque -->
+<div class="modal-backdrop hidden" id="modal-risk">
+  <div class="modal-box">
+    <h2>Comprendre le Risque</h2>
+    <div class="risk-grid">
+      <div class="risk-col faible"><h3>Faible</h3><p>Peu de conditions favorables</p></div>
+      <div class="risk-col modere"><h3>Modéré</h3><p>Conditions favorables au développement des moustiques</p></div>
+      <div class="risk-col eleve"><h3>Élevé</h3><p>Risque élevé de présence de moustiques</p></div>
+    </div>
+    <div class="risk-asavoir">
+      <h4>À savoir</h4>
+      <ul>
+        <li>Estimation basée sur des modèles</li>
+        <li>Pas une mesure directe des moustiques</li>
+        <li>Évolution incertaine</li>
+      </ul>
+    </div>
+    <button class="modal-close-btn" onclick="closeModal('modal-risk')">Fermer</button>
+  </div>
+</div>
+
+<!-- MODAL : Que puis-je faire -->
+<div class="modal-backdrop hidden" id="modal-advice">
+  <div class="modal-box">
+    <h2>Que puis-je faire ?</h2>
+    <div class="advice-level faible">
+      <h4>Niveau Faible</h4>
+      <ul>
+        <li>Surveillez les points d'eau autour de chez vous</li>
+        <li>Portez des vêtements longs le soir</li>
+      </ul>
+    </div>
+    <div class="advice-level modere">
+      <h4>Niveau Modéré</h4>
+      <ul>
+        <li>Éliminez les eaux stagnantes (soucoupes, gouttières...)</li>
+        <li>Protégez-vous des piqûres avec un répulsif</li>
+        <li>Signalez les nids sur <em>signalement-moustique.fr</em></li>
+      </ul>
+    </div>
+    <div class="advice-level eleve">
+      <h4>Niveau Élevé</h4>
+      <ul>
+        <li>Évitez les sorties à l'aube et au crépuscule</li>
+        <li>Utilisez des répulsifs homologués</li>
+        <li>Protégez les nourrissons et personnes sensibles</li>
+        <li>Contactez votre mairie si présence massive</li>
+      </ul>
+    </div>
+    <button class="modal-close-btn" onclick="closeModal('modal-advice')">Fermer</button>
+  </div>
+</div>
+
+<script>
+// ─── CONSTANTES ─────────────────────────────────────────────────────────────
+const RISK_COLORS = { faible: '#4caf50', modere: '#ff9800', eleve: '#e53935' };
+const RISK_LABELS = { faible: 'Faible', modere: 'Modéré', eleve: 'Élevé' };
+const RISK_INTERP = {
+  faible: 'Peu de conditions favorables au développement du moustique tigre.',
+  modere: 'Conditions favorables au développement du moustique tigre.',
+  eleve:  'Conditions très favorables — risque élevé de présence du moustique tigre.'
+};
+const RISK_TODO = {
+  faible: ['Surveillez les points d\'eau autour de chez vous'],
+  modere: ['Éliminez les eaux stagnantes', 'Protégez-vous des piqûres'],
+  eleve:  ['Éliminez les eaux stagnantes', 'Protégez-vous des piqûres', 'Évitez les sorties à l\'aube et au crépuscule']
+};
+
+// ─── ÉTAT ────────────────────────────────────────────────────────────────────
+let mode = 'citoyen';   // 'citoyen' | 'elu'
+let allData = [];        // grouped JSON
+let flatByCode = {};     // codgeo → array of weeks (sorted)
+let lastWeekDate = '';
+let geoLayer = null;
+let map;
+let weeks = [];          // liste des dates disponibles
+let weekIdx = 0;         // index de la semaine affichée
+let playTimer = null;
+
+// ─── INIT MAP ────────────────────────────────────────────────────────────────
+map = L.map('map', { center: [43.65, 3.4], zoom: 9, preferCanvas: true, zoomControl: true });
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '© CartoDB', subdomains: 'abcd', maxZoom: 19
+}).addTo(map);
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function scoreToRisk(ab) {
+  if (ab === null || ab === undefined) return 'faible';
+  if (ab < 3)  return 'faible';
+  if (ab < 10) return 'modere';
+  return 'eleve';
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+function setLoading(txt) {
+  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('loading-text').textContent = txt;
+}
+function hideLoading() { document.getElementById('loading').style.display = 'none'; }
+function showError(msg) {
+  document.getElementById('loading').innerHTML =
+    `<div class="error-box">⚠ Erreur<br><br>${msg}<br><br>
+     <button onclick="location.reload()">Réessayer</button></div>`;
+}
+function openModal(id)  { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+// Fermer modal en cliquant le backdrop
+document.querySelectorAll('.modal-backdrop').forEach(el =>
+  el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); })
+);
+
+// ─── CHARGEMENT DONNÉES ──────────────────────────────────────────────────────
+async function loadData() {
+  setLoading('Chargement des données locales Hérault...');
+  const r = await fetch('Data/albo_weekly_herault.json');
+  if (!r.ok) throw new Error('Fichier introuvable (HTTP ' + r.status + ')');
+  allData = await r.json();
+
+  // Index par codgeo
+  allData.forEach(c => { flatByCode[c.codgeo] = c; });
+
+  // Extraction des semaines disponibles
+  if (allData.length && allData[0].weeks.length) {
+    weeks = allData[0].weeks.map(w => w.date);
+    weekIdx = weeks.length - 1;
+    lastWeekDate = weeks[weeks.length - 1];
+    const slider = document.getElementById('tn-slider');
+    slider.max = weeks.length - 1;
+    slider.value = weekIdx;
+    updateTimeDisplay();
+  }
+}
+
+// ─── CHARGEMENT FRONTIÈRES ──────────────────────────────────────────────────
+async function loadGeo() {
+  setLoading('Chargement des frontières communes...');
+  const r = await fetch('https://geo.api.gouv.fr/departements/34/communes?format=geojson&geometry=contour');
+  if (!r.ok) throw new Error('Frontières indisponibles (HTTP ' + r.status + ')');
+  return r.json();
+}
+
+// ─── RENDU CARTE ─────────────────────────────────────────────────────────────
+function renderMap(geojson) {
+  if (geoLayer) { geoLayer.remove(); }
+
+  geoLayer = L.geoJSON(geojson, {
+    style: feature => {
+      const code = feature.properties.code;
+      const commune = flatByCode[code];
+      const curDate = weeks[weekIdx];
+      const weekData = commune
+        ? (curDate ? commune.weeks.find(w => w.date === curDate) : null) || commune.weeks[commune.weeks.length - 1]
+        : null;
+      const risk = weekData ? scoreToRisk(weekData.abundance) : 'faible';
+      return {
+        fillColor: RISK_COLORS[risk],
+        fillOpacity: 0.65,
+        color: '#fff',
+        weight: 0.8
+      };
+    },
+    onEachFeature: (feature, layer) => {
+      layer.on({
+        mouseover: e => { e.target.setStyle({ fillOpacity: 0.9, weight: 2, color: '#333' }); },
+        mouseout:  e => { geoLayer.resetStyle(e.target); },
+        click:     e => { showCommune(feature.properties.code, feature.properties.nom); }
+      });
+    }
+  }).addTo(map);
+
+  // Barre de risque global (moyenne Hérault)
+  updateBottomBar();
+}
+
+// ─── MISE À JOUR BARRE RISQUE GLOBAL ─────────────────────────────────────────
+function updateBottomBar() {
+  const curDate = weeks[weekIdx];
+  const counts = { faible: 0, modere: 0, eleve: 0 };
+  allData.forEach(c => {
+    const w = curDate
+      ? (c.weeks.find(wk => wk.date === curDate) || c.weeks[c.weeks.length - 1])
+      : c.weeks[c.weeks.length - 1];
+    const r = w ? scoreToRisk(w.abundance) : 'faible';
+    counts[r]++;
+  });
+  // Risque dominant
+  const dominant = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+  const dot = document.getElementById('bottom-risk-dot');
+  dot.style.background = RISK_COLORS[dominant];
+  document.getElementById('bottom-msg').textContent =
+    `Risque ${RISK_LABELS[dominant].toLowerCase()} actuellement sur votre zone !`;
+}
+
+// ─── FICHE COMMUNE ───────────────────────────────────────────────────────────
+function showCommune(code, nom) {
+  const commune = flatByCode[code];
+  document.getElementById('mc-name').textContent = nom || code;
+
+  if (!commune || !commune.weeks.length) {
+    document.getElementById('mc-level-badge').textContent = 'Inconnu';
+    openModal('modal-commune');
+    return;
+  }
+
+  const weeks = commune.weeks;
+  const last  = weeks[weeks.length - 1];
+  const prev  = weeks.length > 1 ? weeks[weeks.length - 2] : null;
+
+  const risk     = scoreToRisk(last.abundance);
+  const riskPrev = prev ? scoreToRisk(prev.abundance) : risk;
+
+  // Niveau
+  const badge = document.getElementById('mc-level-badge');
+  badge.textContent = RISK_LABELS[risk];
+  badge.className = 'mc-level-badge ' + risk;
+
+  // Tendance
+  const trendEl   = document.getElementById('mc-trend');
+  const trendIcon = document.getElementById('mc-trend-icon');
+  const riskOrder = { faible: 0, modere: 1, eleve: 2 };
+  const delta = riskOrder[risk] - riskOrder[riskPrev];
+  if (delta > 0)      { trendEl.textContent = '↗ En hausse';  trendIcon.style.background = '#e53935'; }
+  else if (delta < 0) { trendEl.textContent = '↘ En baisse';  trendIcon.style.background = '#4caf50'; }
+  else                { trendEl.textContent = '→ Stable';      trendIcon.style.background = '#1a5490'; }
+
+  // Date
+  document.getElementById('mc-date').textContent = fmtDate(last.date);
+
+  // Interprétation
+  document.getElementById('mc-interpretation').textContent = RISK_INTERP[risk];
+
+  // À faire
+  const todoEl = document.getElementById('mc-todo');
+  todoEl.innerHTML = RISK_TODO[risk].map(t => `<li>${t}</li>`).join('');
+
+  openModal('modal-commune');
+}
+
+// ─── STATS HEBDOMADAIRES ─────────────────────────────────────────────────────
+function computeWeeklyStats() {
+  const dateMap = {};
+  allData.forEach(c => {
+    c.weeks.forEach(w => {
+      if (!dateMap[w.date]) dateMap[w.date] = [];
+      if (w.abundance != null) dateMap[w.date].push(w.abundance);
+    });
+  });
+  const avg = arr => arr.reduce((s, v) => s + v, 0) / arr.length;
+  return Object.entries(dateMap)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, vals]) => ({
+      date,
+      mean:  vals.length ? avg(vals) : 0,
+      eleve:  vals.filter(v => v >= 10).length,
+      modere: vals.filter(v => v >= 3 && v < 10).length,
+      faible: vals.filter(v => v < 3).length,
+      total:  vals.length
+    }));
+}
+
+// ─── VISUALISATIONS MODE ÉLU ─────────────────────────────────────────────────
+const eluCharts = {};
+function destroyEluChart(id) {
+  if (eluCharts[id]) { eluCharts[id].destroy(); delete eluCharts[id]; }
+}
+
+function buildEluCharts() {
+  if (!allData.length) return;
+  const weeklyStats = computeWeeklyStats();
+  const recent = weeklyStats.slice(-30);
+
+  updateEluKPIs(weeklyStats);
+  buildFullTrendChart(recent);
+  buildStackedRiskChart(recent);
+  buildRankingChart();
+  buildAlertsPanel();
+}
+
+function updateEluKPIs(weeklyStats) {
+  const last = weeklyStats[weeklyStats.length - 1];
+  if (!last) return;
+  document.getElementById('elu-nb-eleve').textContent  = last.eleve;
+  document.getElementById('elu-nb-modere').textContent = last.modere;
+  document.getElementById('elu-mean-ab').textContent   = last.mean.toFixed(1);
+}
+
+function buildFullTrendChart(recent) {
+  const labels = recent.map(s => s.date.slice(5));
+  const data   = recent.map(s => s.mean);
+  destroyEluChart('chart-elu-trend-full');
+  eluCharts['chart-elu-trend-full'] = new Chart(document.getElementById('chart-elu-trend-full'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        borderColor: '#1a5490',
+        backgroundColor: ctx => {
+          const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 130);
+          g.addColorStop(0, 'rgba(229,57,53,0.35)');
+          g.addColorStop(0.5, 'rgba(255,152,0,0.25)');
+          g.addColorStop(1, 'rgba(76,175,80,0.12)');
+          return g;
+        },
+        fill: true, tension: 0.4, borderWidth: 2, pointRadius: 1.5,
+        pointBackgroundColor: data.map(v => RISK_COLORS[scoreToRisk(v)])
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        annotation: {
+          annotations: {
+            lineModere: { type: 'line', yMin: 3,  yMax: 3,  borderColor: '#ff9800', borderWidth: 1, borderDash: [4,3] },
+            lineEleve:  { type: 'line', yMin: 10, yMax: 10, borderColor: '#e53935', borderWidth: 1, borderDash: [4,3] }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { font: { size: 8 }, maxTicksLimit: 8 }, grid: { display: false } },
+        y: { min: 0, ticks: { font: { size: 9 }, maxTicksLimit: 4 }, grid: { color: '#f0f0f0' } }
+      }
+    }
+  });
+}
+
+function buildStackedRiskChart(recent) {
+  const labels  = recent.map(s => s.date.slice(5));
+  destroyEluChart('chart-elu-stack');
+  eluCharts['chart-elu-stack'] = new Chart(document.getElementById('chart-elu-stack'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Élevé',  data: recent.map(s => s.total ? (s.eleve  / s.total * 100).toFixed(1) : 0), backgroundColor: '#e5393566' },
+        { label: 'Modéré', data: recent.map(s => s.total ? (s.modere / s.total * 100).toFixed(1) : 0), backgroundColor: '#ff980066' },
+        { label: 'Faible', data: recent.map(s => s.total ? (s.faible / s.total * 100).toFixed(1) : 0), backgroundColor: '#4caf5066' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { font: { size: 9 }, boxWidth: 10 } } },
+      scales: {
+        x: { stacked: true, ticks: { font: { size: 8 }, maxTicksLimit: 8 }, grid: { display: false } },
+        y: { stacked: true, min: 0, max: 100,
+             ticks: { font: { size: 9 }, maxTicksLimit: 4, callback: v => v + '%' },
+             grid: { color: '#f0f0f0' } }
+      }
+    }
+  });
+}
+
+function buildRankingChart() {
+  const ranked = allData
+    .map(c => {
+      const last = c.weeks[c.weeks.length - 1];
+      return { name: c.libgeo.slice(0, 16), val: last?.abundance ?? 0 };
+    })
+    .sort((a, b) => b.val - a.val)
+    .slice(0, 10);
+
+  destroyEluChart('chart-elu-rank');
+  eluCharts['chart-elu-rank'] = new Chart(document.getElementById('chart-elu-rank'), {
+    type: 'bar',
+    data: {
+      labels: ranked.map(d => d.name),
+      datasets: [{
+        data: ranked.map(d => d.val),
+        backgroundColor: ranked.map(d => d.val >= 10 ? 'rgba(229,57,53,.7)' : d.val >= 3 ? 'rgba(255,152,0,.7)' : 'rgba(76,175,80,.6)'),
+        borderRadius: 3
+      }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { font: { size: 9 } }, grid: { color: '#f0f0f0' } },
+        y: { ticks: { font: { size: 9 } }, grid: { display: false } }
+      }
+    }
+  });
+
+}
+
+function buildAlertsPanel() {
+  const alerts = allData
+    .map(c => {
+      const last = c.weeks[c.weeks.length - 1];
+      const prev = c.weeks.length > 1 ? c.weeks[c.weeks.length - 2] : null;
+      return { name: c.libgeo, val: last?.abundance ?? 0, prevVal: prev?.abundance ?? null, date: last?.date };
+    })
+    .filter(a => a.val >= 3)
+    .sort((a, b) => b.val - a.val)
+    .slice(0, 15);
+
+  const html = alerts.length
+    ? alerts.map(a => {
+        const cls   = a.val >= 10 ? 'high' : 'med';
+        const delta = a.prevVal != null ? a.val - a.prevVal : 0;
+        const arrow = delta > 0.5 ? '↗' : delta < -0.5 ? '↘' : '→';
+        return `<div class="elu-alert ${cls}">
+          <div class="elu-alert-dot"></div>
+          <div style="flex:1">
+            <b>${a.name}</b> <span style="font-size:10px;opacity:.8">${arrow} ${a.val.toFixed(1)} ind/p.</span>
+            <div style="font-size:9px;opacity:.6">${fmtDate(a.date)}</div>
+          </div>
+        </div>`;
+      }).join('')
+    : '<div style="color:#aaa;font-size:11px;text-align:center;padding:20px">Aucune alerte cette semaine</div>';
+
+  document.getElementById('elu-alert-list').innerHTML = html;
+}
+
+// ─── SWITCH TAB ÉLU ──────────────────────────────────────────────────────────
+function switchEluTab(id, btn) {
+  document.querySelectorAll('.elu-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.elu-pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('elu-pane-' + id).classList.add('active');
+}
+
+// ─── NAVIGATION TEMPORELLE ───────────────────────────────────────────────────
+function updateTimeDisplay() {
+  if (!weeks.length) return;
+  document.getElementById('tn-current-date').textContent = fmtDate(weeks[weekIdx]);
+  document.getElementById('tn-week-info').textContent = `Sem. ${weekIdx + 1} / ${weeks.length}`;
+  document.getElementById('tn-slider').value = weekIdx;
+}
+function onSlider(v) {
+  weekIdx = parseInt(v);
+  updateTimeDisplay();
+  if (geojsonData) renderMap(geojsonData);
+}
+function prevWeek() {
+  if (weekIdx > 0) { weekIdx--; updateTimeDisplay(); if (geojsonData) renderMap(geojsonData); }
+}
+function nextWeek() {
+  if (weekIdx < weeks.length - 1) { weekIdx++; updateTimeDisplay(); if (geojsonData) renderMap(geojsonData); }
+}
+function togglePlay() {
+  const btn = document.getElementById('play-btn');
+  if (playTimer) {
+    clearInterval(playTimer); playTimer = null;
+    btn.textContent = '▶ Play'; btn.classList.remove('active');
+  } else {
+    btn.textContent = '⏸ Pause'; btn.classList.add('active');
+    playTimer = setInterval(() => {
+      if (weekIdx < weeks.length - 1) {
+        weekIdx++; updateTimeDisplay(); if (geojsonData) renderMap(geojsonData);
+      } else {
+        clearInterval(playTimer); playTimer = null;
+        btn.textContent = '▶ Play'; btn.classList.remove('active');
+      }
+    }, 700);
+  }
+}
+
+// ─── TOGGLE MODE ─────────────────────────────────────────────────────────────
+function toggleMode() {
+  mode = mode === 'citoyen' ? 'elu' : 'citoyen';
+  const btn    = document.getElementById('btn-hmode');
+  const legend = document.getElementById('legend');
+
+  if (mode === 'elu') {
+    btn.textContent = 'Élu';
+    btn.classList.add('active');
+    document.getElementById('btn-hexport').classList.remove('hidden');
+    document.getElementById('panel-elu').classList.remove('hidden');
+    document.getElementById('bottom-bar').classList.add('hidden');
+    document.getElementById('bottom-actions').classList.add('hidden');
+    document.getElementById('search-widget').classList.add('hidden');
+    legend.classList.add('elu-shift');
+    buildEluCharts();
+  } else {
+    btn.textContent = 'Citoyen';
+    btn.classList.remove('active');
+    document.getElementById('btn-hexport').classList.add('hidden');
+    document.getElementById('panel-elu').classList.add('hidden');
+    document.getElementById('bottom-bar').classList.remove('hidden');
+    document.getElementById('bottom-actions').classList.remove('hidden');
+    document.getElementById('search-widget').classList.remove('hidden');
+    legend.classList.remove('elu-shift');
+  }
+}
+
+// ─── EXPORT CSV ──────────────────────────────────────────────────────────────
+function exportCSV() {
+  const rows = [['codgeo', 'libgeo', 'date', 'abondance', 'risque']];
+  allData.forEach(c => {
+    const w = c.weeks[c.weeks.length - 1];
+    if (w) rows.push([c.codgeo, c.libgeo, w.date, w.abundance ?? '', scoreToRisk(w.abundance)]);
+  });
+  const csv  = rows.map(r => r.join(';')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `risque_herault_${lastWeekDate}.csv`; a.click();
+}
+
+// ─── WIDGET RECHERCHE COMMUNE ────────────────────────────────────────────────
+let swMatches = [];
+let swFocusIdx = -1;
+let swSelectedCode = null;
+let geojsonData = null;
+
+function swToggle() {
+  const body = document.getElementById('sw-body');
+  const btn  = document.getElementById('sw-toggle-btn');
+  const collapsed = body.classList.toggle('collapsed');
+  btn.textContent = collapsed ? '+' : '×';
+}
+
+function swOnInput(val) {
+  swFocusIdx = -1;
+  const q = val.trim().toLowerCase();
+  const box = document.getElementById('sw-suggestions');
+  document.getElementById('sw-result').classList.add('hidden');
+  swSelectedCode = null;
+
+  if (q.length < 2) { box.innerHTML = ''; return; }
+
+  swMatches = allData
+    .filter(c => c.libgeo.toLowerCase().includes(q))
+    .slice(0, 8);
+
+  if (!swMatches.length) { box.innerHTML = '<div class="sw-suggestion" style="color:#aaa;cursor:default">Aucun résultat</div>'; return; }
+
+  box.innerHTML = swMatches.map((c, i) => {
+    const hl = c.libgeo.replace(new RegExp(val.trim(), 'gi'), m => `<b>${m}</b>`);
+    return `<div class="sw-suggestion" data-idx="${i}" onmousedown="swSelect(${i})">${hl}</div>`;
+  }).join('');
+}
+
+function swOnKey(e) {
+  const items = document.querySelectorAll('.sw-suggestion');
+  if (e.key === 'ArrowDown') { swFocusIdx = Math.min(swFocusIdx + 1, items.length - 1); swHighlight(items); e.preventDefault(); }
+  else if (e.key === 'ArrowUp') { swFocusIdx = Math.max(swFocusIdx - 1, 0); swHighlight(items); e.preventDefault(); }
+  else if (e.key === 'Enter' && swFocusIdx >= 0) { swSelect(swFocusIdx); }
+  else if (e.key === 'Escape') { document.getElementById('sw-suggestions').innerHTML = ''; }
+}
+
+function swHighlight(items) {
+  items.forEach((el, i) => el.classList.toggle('focused', i === swFocusIdx));
+}
+
+function swSelect(idx) {
+  const commune = swMatches[idx];
+  if (!commune) return;
+  document.getElementById('sw-input').value = commune.libgeo;
+  document.getElementById('sw-suggestions').innerHTML = '';
+  swSelectedCode = commune.codgeo;
+  swShowResult(commune);
+  swZoom(commune.codgeo);
+}
+
+function swShowResult(commune) {
+  const weeks   = commune.weeks;
+  const last    = weeks[weeks.length - 1];
+  const prev    = weeks.length > 1 ? weeks[weeks.length - 2] : null;
+  const risk    = scoreToRisk(last?.abundance);
+  const riskPrev= prev ? scoreToRisk(prev.abundance) : risk;
+  const rOrder  = { faible: 0, modere: 1, eleve: 2 };
+  const delta   = rOrder[risk] - rOrder[riskPrev];
+  const arrow   = delta > 0 ? '↗ En hausse' : delta < 0 ? '↘ En baisse' : '→ Stable';
+  const arrowColor = delta > 0 ? '#e53935' : delta < 0 ? '#4caf50' : '#1a5490';
+
+  document.getElementById('sw-rname').textContent = commune.libgeo;
+  document.getElementById('sw-rkpis').innerHTML = `
+    <div class="sw-kpi risk-${risk}">
+      <span class="sw-kpi-val">${RISK_LABELS[risk]}</span>
+      <span class="sw-kpi-lbl">Niveau</span>
+    </div>
+    <div class="sw-kpi">
+      <span class="sw-kpi-val">${last?.abundance != null ? last.abundance.toFixed(1) : '—'}</span>
+      <span class="sw-kpi-lbl">ind/piège</span>
+    </div>
+    <div class="sw-kpi">
+      <span class="sw-kpi-val">${last?.temperature != null ? last.temperature.toFixed(1) + '°' : '—'}</span>
+      <span class="sw-kpi-lbl">Temp.</span>
+    </div>`;
+
+  document.getElementById('sw-rtrend').innerHTML =
+    `<span style="color:${arrowColor};font-weight:600">${arrow}</span>
+     &nbsp;·&nbsp; Sem. du ${fmtDate(last?.date)}`;
+
+  document.getElementById('sw-rbtn').onclick = () => showCommune(commune.codgeo, commune.libgeo);
+  document.getElementById('sw-result').classList.remove('hidden');
+}
+
+function swZoom(code) {
+  if (!geojsonData) return;
+  const feat = geojsonData.features.find(f => f.properties.code === code);
+  if (!feat) return;
+  map.fitBounds(L.geoJSON(feat).getBounds(), { padding: [40, 40], maxZoom: 13 });
+}
+
+// ─── MAIN ────────────────────────────────────────────────────────────────────
+(async () => {
+  try {
+    const [_, geojson] = await Promise.all([loadData(), loadGeo()]);
+    geojsonData = geojson;
+    renderMap(geojson);
+    hideLoading();
+  } catch(e) {
+    showError(e.message);
+    console.error(e);
+  }
+})();
+</script>
+</body>
+</html>
