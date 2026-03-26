@@ -50,6 +50,19 @@ header{grid-column:1/-1;background:#1a5490;border-bottom:none;display:flex;align
 .chart-wrap canvas{position:absolute;top:0;left:0;width:100%!important;height:100%!important}
 .chart-title{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .chart-title .badge{background:rgba(26,84,144,.12);color:var(--accent);border-radius:4px;padding:1px 6px;font-size:9px}
+.chart-expand-btn{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:13px;line-height:1;padding:0 2px;transition:color .15s;opacity:.6}
+.chart-expand-btn:hover{color:var(--accent);opacity:1}
+
+/* CHART MODAL */
+#chart-modal{position:fixed;inset:0;z-index:9000;background:rgba(15,23,42,.82);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center}
+#chart-modal.hidden{display:none}
+#chart-modal-inner{background:var(--surface);border-radius:14px;padding:20px;box-shadow:0 8px 40px rgba(0,0,0,.35);max-width:90vw;max-height:88vh;display:flex;flex-direction:column;gap:12px;min-width:480px}
+#chart-modal-header{display:flex;align-items:center;justify-content:space-between}
+#chart-modal-title{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
+#chart-modal-close{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px;color:var(--text-muted);transition:all .15s}
+#chart-modal-close:hover{border-color:var(--danger);color:var(--danger)}
+#chart-modal-canvas-wrap{flex:1;overflow:hidden;border-radius:8px;background:var(--surface2);border:1px solid var(--border)}
+#chart-modal-canvas-wrap canvas{width:100%!important;height:100%!important}
 
 /* KPI GRID */
 .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -271,14 +284,19 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
 
   <!-- TAB: Graphique bivarié Abondance × Température -->
   <div class="tab-pane active" id="tab-bivar">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+      <button id="scale-toggle-btn" onclick="toggleScatterScale()" style="font-family:var(--font-mono);font-size:9px;padding:3px 10px;border-radius:5px;border:1px solid var(--accent);background:rgba(26,84,144,.1);color:var(--accent);cursor:pointer;transition:all .2s" title="Basculer échelle fixe / adaptative">
+        📐 Échelle fixe
+      </button>
+    </div>
     <div class="chart-box">
       <div class="chart-title">🔬 Abondance × Température <span class="badge">BIVARIÉ</span></div>
-      <div class="chart-wrap" style="height:200px"><canvas id="chart-scatter"></canvas></div>
+      <div class="chart-wrap" style="height:200px"><canvas id="chart-scatter" style="cursor:pointer"></canvas></div>
       <div class="bivar-legend" id="bivar-legend"></div>
     </div>
     <div class="chart-box" style="margin-top:10px">
       <div class="chart-title">💧 Abondance × Humidité <span class="badge">BIVARIÉ</span></div>
-      <div class="chart-wrap" style="height:160px"><canvas id="chart-scatter2"></canvas></div>
+      <div class="chart-wrap" style="height:160px"><canvas id="chart-scatter2" style="cursor:pointer"></canvas></div>
     </div>
     <div class="chart-box" style="margin-top:10px">
       <div class="chart-title">🧠 Importance des variables <span class="badge">SHAP</span></div>
@@ -335,8 +353,18 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;height:4p
   </div>
 </div>
 
-
-
+<!-- CHART MODAL -->
+<div id="chart-modal" class="hidden">
+  <div id="chart-modal-inner">
+    <div id="chart-modal-header">
+      <span id="chart-modal-title">Graphique</span>
+      <button id="chart-modal-close" onclick="closeChartModal()">✕ Fermer</button>
+    </div>
+    <div id="chart-modal-canvas-wrap" style="height:65vh">
+      <canvas id="chart-modal-canvas"></canvas>
+    </div>
+  </div>
+</div>
 
 
 <script>
@@ -353,8 +381,10 @@ const VARS={
 const DEP_PALETTE=['#00d4ff','#7c3aed','#f97316','#22c55e','#f59e0b','#ec4899','#a78bfa'];
 
 let weeks=[], weekIdx=0, curVar='abundance', geoLayer=null, playTimer=null, map, curDep='34', prevWeekVals=null;
-let baseGeoJSON = null; 
+let baseGeoJSON = null;
 let cachedWfsData = [];
+let scatterScales = {};       // plages fixes calculées sur toutes les semaines
+let scatterFixedScale = true; // true = axes fixes, false = adaptatif
 const charts={};
 
 const fmt=(v,u)=>{const f=parseFloat(v);return isNaN(f)?'N/D':f.toFixed(1)+u;};
@@ -418,6 +448,18 @@ async function initDashboard(){
 
     const wSet = new Set(cachedWfsData.map(p => (p[C.date]||'').substring(0,10)).filter(Boolean));
     weeks = [...wSet].sort();
+
+    // Plages globales pour axes fixes des scatter (toutes semaines)
+    const _ab=cachedWfsData.map(p=>parseFloat(p[C.abund])).filter(v=>!isNaN(v));
+    const _tp=cachedWfsData.map(p=>parseFloat(p[C.temp])).filter(v=>!isNaN(v));
+    const _hm=cachedWfsData.map(p=>parseFloat(p[C.hum])).filter(v=>!isNaN(v));
+    scatterScales = {
+      abMax  : _ab.length ? Math.ceil(Math.max(..._ab) * 1.05) : 20,
+      tempMin: _tp.length ? Math.floor(Math.min(..._tp)) - 1   : 0,
+      tempMax: _tp.length ? Math.ceil(Math.max(..._tp))  + 1   : 40,
+      humMin : _hm.length ? Math.floor(Math.min(..._hm)) - 1   : 0,
+      humMax : _hm.length ? Math.ceil(Math.max(..._hm))  + 1   : 100,
+    };
     
     setEl('h-weeks', weeks.length);
     const sl = document.getElementById('time-slider');
@@ -443,9 +485,15 @@ function loadGlobalStatsAndTrends(){
     });
     const recentStats = stats.slice(-30);
     if(recentStats.length){
-      buildTrendChart(recentStats);
-      buildTempAbChart(recentStats);
-      buildClimateChart(recentStats);
+      // Échelles partagées calculées une seule fois sur les mêmes données
+      const abVals=recentStats.map(s=>s.mean_ab).filter(v=>!isNaN(v));
+      const abMax=abVals.length?Math.ceil(Math.max(...abVals)*1.15):20;
+      const tempVals=recentStats.map(s=>s.mean_temp).filter(v=>!isNaN(v));
+      const tempMin=tempVals.length?Math.floor(Math.min(...tempVals)*0.95):0;
+      const tempMax=tempVals.length?Math.ceil(Math.max(...tempVals)*1.05):40;
+      buildTrendChart(recentStats, abMax);
+      buildTempAbChart(recentStats, abMax, tempMin, tempMax);
+      buildClimateChart(recentStats, tempMin, tempMax);
     }
   } catch(e) { console.error("Erreur stats", e); }
 }
@@ -560,22 +608,76 @@ function showTooltip(f,latlng){
   ).openOn(map);
 }
 
+function toggleScatterScale(){
+  scatterFixedScale = !scatterFixedScale;
+  const btn = document.getElementById('scale-toggle-btn');
+  btn.textContent = scatterFixedScale ? '📐 Échelle fixe' : '🔀 Échelle adaptative';
+  btn.style.background = scatterFixedScale ? 'rgba(26,84,144,.1)' : 'var(--surface)';
+  btn.style.borderColor = scatterFixedScale ? 'var(--accent)' : 'var(--border)';
+  btn.style.color = scatterFixedScale ? 'var(--accent)' : 'var(--text-muted)';
+  // Reconstruire les scatter avec la nouvelle config
+  const week = weeks[weekIdx];
+  const features = cachedWfsData.filter(p=>(p[C.date]||'').substring(0,10)===week).map(p=>({
+    type:'Feature',geometry:null,properties:{
+      code:p[C.codgeo],nom:p[C.libgeo],codgeo:p[C.codgeo],libgeo:p[C.libgeo],
+      mean_abundance_albopictus:parseFloat(p[C.abund]),
+      mean_temperature:parseFloat(p[C.temp]),
+      mean_humidity:parseFloat(p[C.hum]),
+      mean_rainfall:parseFloat(p[C.rain])
+    }
+  }));
+  buildScatterCharts(features);
+}
+
+function zoomToCode(code){
+  if(!baseGeoJSON||!code)return;
+  const feat=baseGeoJSON.features.find(f=>f.properties.code===code);
+  if(!feat)return;
+  map.fitBounds(L.geoJSON(feat).getBounds(),{padding:[40,40],maxZoom:13});
+}
+
 function buildScatterCharts(features){
-  const pts1=features.map(f=>({x:parseFloat(f.properties.mean_temperature),y:parseFloat(f.properties.mean_abundance_albopictus)})).filter(p=>!isNaN(p.x)&&!isNaN(p.y));
+  const pts1=features.map(f=>({
+    x:parseFloat(f.properties.mean_temperature),
+    y:parseFloat(f.properties.mean_abundance_albopictus),
+    code:f.properties.codgeo||f.properties.code,
+    nom:f.properties.nom||f.properties.libgeo||''
+  })).filter(p=>!isNaN(p.x)&&!isNaN(p.y));
+
+  const pts2=features.map(f=>({
+    x:parseFloat(f.properties.mean_humidity),
+    y:parseFloat(f.properties.mean_abundance_albopictus),
+    code:f.properties.codgeo||f.properties.code,
+    nom:f.properties.nom||f.properties.libgeo||''
+  })).filter(p=>!isNaN(p.x)&&!isNaN(p.y));
+
+  const fixed = scatterFixedScale;
+  const yAbScale = {
+    min: 0,
+    ...(fixed ? {max: scatterScales.abMax} : {}),
+    ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'},
+    title:{display:true,text:'Abondance (ind/trap)',color:'#64748b',font:{size:9}}
+  };
+
   destroyChart('chart-scatter');
   charts['chart-scatter']=new Chart(document.getElementById('chart-scatter'),{type:'scatter',
-    data:{datasets:[{data:pts1,backgroundColor:'rgba(239,68,68,0.5)',borderColor:'#ef4444',pointRadius:3}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-    scales:{x:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'},title:{display:true,text:'Température (°C)',color:'#64748b',font:{size:9}}},
-            y:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'},title:{display:true,text:'Abondance (ind/trap)',color:'#64748b',font:{size:9}}}}}});
-  
-  const pts2=features.map(f=>({x:parseFloat(f.properties.mean_humidity),y:parseFloat(f.properties.mean_abundance_albopictus)})).filter(p=>!isNaN(p.x)&&!isNaN(p.y));
+    data:{datasets:[{data:pts1,backgroundColor:'rgba(239,68,68,0.5)',borderColor:'#ef4444',pointRadius:3,pointHoverRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>(c.raw.nom||c.raw.code||'')+(` — T: ${c.raw.x.toFixed(1)}°C, Ab: ${c.raw.y.toFixed(1)}`)}}},
+      onClick:(_,els)=>{if(els.length)zoomToCode(pts1[els[0].index].code);},
+      scales:{
+        x:{...(fixed?{min:scatterScales.tempMin,max:scatterScales.tempMax}:{}),ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'},title:{display:true,text:'Température (°C)',color:'#64748b',font:{size:9}}},
+        y:yAbScale}}});
+
   destroyChart('chart-scatter2');
   charts['chart-scatter2']=new Chart(document.getElementById('chart-scatter2'),{type:'scatter',
-    data:{datasets:[{data:pts2,backgroundColor:'#6366f166',borderColor:'#6366f1',pointRadius:3}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-    scales:{x:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'},title:{display:true,text:'Humidité (%)',color:'#64748b',font:{size:9}}},
-            y:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'},title:{display:true,text:'Abondance (ind/trap)',color:'#64748b',font:{size:9}}}}}});
+    data:{datasets:[{data:pts2,backgroundColor:'#6366f166',borderColor:'#6366f1',pointRadius:3,pointHoverRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>(c.raw.nom||c.raw.code||'')+(` — Hum: ${c.raw.x.toFixed(1)}%, Ab: ${c.raw.y.toFixed(1)}`)}}},
+      onClick:(_,els)=>{if(els.length)zoomToCode(pts2[els[0].index].code);},
+      scales:{
+        x:{...(fixed?{min:scatterScales.humMin,max:scatterScales.humMax}:{}),ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'},title:{display:true,text:'Humidité (%)',color:'#64748b',font:{size:9}}},
+        y:yAbScale}}});
   buildShapChart(features);
 }
 
@@ -636,7 +738,7 @@ function buildRankList(features){
   const list=document.getElementById('dep-rank-list'),maxV=sorted[0]?.val||1;
   list.innerHTML=sorted.slice(0,10).map((d,i)=>'<div class="dep-row"><div class="dep-rank-num">'+(i+1)+'</div><div class="dep-name">'+d.name+'</div><div class="dep-bar-wrap"><div class="dep-bar-fill" style="width:'+((d.val/maxV*100).toFixed(0))+'%"></div></div><div class="dep-val">'+d.val.toFixed(1)+'</div></div>').join('');
 }
-function buildTrendChart(stats){
+function buildTrendChart(stats, abMax){
   const labels=stats.map(s=>(s.date_semaine||'').substring(5));
   const series=stats.map(s=>parseFloat(s.mean_ab));
   destroyChart('chart-trend');
@@ -647,9 +749,10 @@ function buildTrendChart(stats){
       lineModere:{type:'line',yMin:3,yMax:3,borderColor:'#f59e0b',borderWidth:1.5,borderDash:[5,4],label:{content:'Modéré',display:true,position:'end',color:'#f59e0b',font:{size:9},backgroundColor:'transparent',padding:2}},
       lineEleve:{type:'line',yMin:10,yMax:10,borderColor:'#ef4444',borderWidth:1.5,borderDash:[5,4],label:{content:'Élevé',display:true,position:'end',color:'#ef4444',font:{size:9},backgroundColor:'transparent',padding:2}}
     }}},
-    scales:{x:{ticks:{color:'#64748b',font:{size:8},maxTicksLimit:10},grid:{color:'#e8eef5'}},y:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'}}}}});
+    scales:{x:{ticks:{color:'#64748b',font:{size:8},maxTicksLimit:10},grid:{color:'#e8eef5'}},
+            y:{min:0,max:abMax,ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'}}}}});
 }
-function buildTempAbChart(stats){
+function buildTempAbChart(stats, abMax, tempMin, tempMax){
   const labels=stats.map(s=>(s.date_semaine||'').substring(5));
   destroyChart('chart-tempab');
   charts['chart-tempab']=new Chart(document.getElementById('chart-tempab'),{type:'line',
@@ -665,11 +768,11 @@ function buildTempAbChart(stats){
       }}},
     scales:{
       x:{ticks:{color:'#64748b',font:{size:8},maxTicksLimit:8},grid:{color:'#e8eef5'}},
-      yT:{position:'left',ticks:{color:'#f97316',font:{size:9}},grid:{color:'#e8eef5'},title:{display:true,text:'Temp. (°C)',color:'#f97316',font:{size:9}}},
-      yA:{position:'right',ticks:{color:'#00d4ff',font:{size:9}},grid:{display:false},title:{display:true,text:'Abond.',color:'#00d4ff',font:{size:9}},min:0}
+      yT:{position:'left',min:tempMin,max:tempMax,ticks:{color:'#f97316',font:{size:9}},grid:{color:'#e8eef5'},title:{display:true,text:'Temp. (°C)',color:'#f97316',font:{size:9}}},
+      yA:{position:'right',min:0,max:abMax,ticks:{color:'#00d4ff',font:{size:9}},grid:{display:false},title:{display:true,text:'Abond.',color:'#00d4ff',font:{size:9}}}
     }}});
 }
-function buildClimateChart(stats){
+function buildClimateChart(stats, tempMin, tempMax){
   const labels=stats.map(s=>(s.date_semaine||'').substring(5));
   destroyChart('chart-climate');
   charts['chart-climate']=new Chart(document.getElementById('chart-climate'),{type:'line',
@@ -679,7 +782,7 @@ function buildClimateChart(stats){
       {label:'Pluie mm',data:stats.map(s=>parseFloat(s.mean_rain)),borderColor:'#22d3ee',backgroundColor:'rgba(34,211,238,.1)',fill:true,tension:.3,pointRadius:1,borderWidth:1,yAxisID:'yT'}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#64748b',font:{size:8},boxWidth:10}}},
     scales:{x:{ticks:{color:'#64748b',font:{size:8},maxTicksLimit:8},grid:{color:'#e8eef5'}},
-            yT:{position:'left',ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'}},
+            yT:{position:'left',min:tempMin,max:tempMax,ticks:{color:'#64748b',font:{size:9}},grid:{color:'#e8eef5'}},
             yH:{position:'right',ticks:{color:'#6366f1',font:{size:9}},grid:{display:false}}}}});
 }
 function buildHistogram(features){
@@ -748,7 +851,59 @@ function switchTab(id){
   });
 }
 
-initMap();initDashboard();
+// ── CHART MODAL ──────────────────────────────────────────────────────────────
+let modalChart = null;
+
+function expandChart(canvasId, title) {
+  const src = charts[canvasId];
+  if (!src) return;
+  document.getElementById('chart-modal-title').textContent = title || canvasId;
+  document.getElementById('chart-modal').classList.remove('hidden');
+
+  if (modalChart) { modalChart.destroy(); modalChart = null; }
+  const destCanvas = document.getElementById('chart-modal-canvas');
+  // Copier la config Chart.js source dans le canvas modal
+  const cfg = src.config;
+  modalChart = new Chart(destCanvas, {
+    type: cfg.type,
+    data: JSON.parse(JSON.stringify(cfg.data)),
+    options: Object.assign({}, cfg.options, {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      plugins: Object.assign({}, cfg.options?.plugins, {
+        legend: Object.assign({}, cfg.options?.plugins?.legend, { display: true })
+      })
+    })
+  });
+}
+
+function closeChartModal() {
+  document.getElementById('chart-modal').classList.add('hidden');
+  if (modalChart) { modalChart.destroy(); modalChart = null; }
+}
+
+// Fermer sur clic backdrop
+document.getElementById('chart-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('chart-modal')) closeChartModal();
+});
+
+// Injecter les boutons ⤢ sur tous les chart-box après le chargement
+function injectExpandButtons() {
+  document.querySelectorAll('.chart-box').forEach(box => {
+    const titleEl = box.querySelector('.chart-title');
+    const canvas  = box.querySelector('canvas');
+    if (!titleEl || !canvas) return;
+    const btn = document.createElement('button');
+    btn.className = 'chart-expand-btn';
+    btn.title = 'Agrandir';
+    btn.textContent = '⤢';
+    btn.addEventListener('click', () => expandChart(canvas.id, titleEl.textContent.trim()));
+    titleEl.appendChild(btn);
+  });
+}
+
+initMap();initDashboard().finally(()=>injectExpandButtons());
 </script>
 
 
