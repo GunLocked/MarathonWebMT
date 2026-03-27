@@ -30,7 +30,7 @@ df_model <- read.csv("df_to_model.csv")
 
 ```
 
-Calcul de la moyenne par semaine du nombre d'œufs par site et année, avec création d'un indicateur binaire de présence/absence de oeufs
+Calcul de la moyenne par semaine du nombre d'œufs par site et année, avec création d'un indicateur binaire de présence/absence de oeufs (provenantu du code de Paul Taconet
 
 ```{r}
 df_model <- df_model %>%
@@ -48,7 +48,7 @@ df_model <- df_model %>%
   dplyr::filter(site != "RENNES")
 ```
 
-Variables retenues par Paul (après CCM et colinéarité ) pour le modèle Présence/Absence
+Variables retenues (provient du code de Paul Taconet) (après CCM et colinéarité ) pour le modèle Présence/Absence
 
 ```{r}
 predictors_presence <- c("TM_0_8", "UM_5_11")
