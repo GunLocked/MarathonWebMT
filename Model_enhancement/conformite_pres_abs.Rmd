@@ -1,0 +1,505 @@
+---
+title: "Conformite_pres_abs"
+output: html_document
+date: "2026-03-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(caret)
+
+library(tidyverse)
+library(caret) 
+library(CAST)
+library(ranger) 
+library(correlation)
+library(tidyverse)
+help(cast)
+
+#install.packages("caret")
+```
+
+Chargement du fichier
+
+```{r}
+setwd("C:/MAMP/htdocs/M1/Marathon")
+df_model <- read.csv("df_to_model.csv")
+
+```
+
+Calcul de la moyenne par semaine du nombre d'œufs par site et année, avec création d'un indicateur binaire de présence/absence de oeufs
+
+```{r}
+df_model <- df_model %>%
+  dplyr::relocate(effectif_jour, .before = RR_0_0) %>%
+  dplyr::group_by(site, Year, week) %>%
+  dplyr::summarise_at(vars(effectif_jour:RFNO), mean, na.rm = TRUE) %>%
+  dplyr::ungroup() %>%
+  rename(NB_ALBO_TOT = effectif_jour) %>%
+  mutate(
+    PRES_ALBO         = ifelse(NB_ALBO_TOT > 0, "Presence", "Absence"),
+    PRES_ALBO         = fct_relevel(PRES_ALBO, c("Presence", "Absence")),
+    PRES_ALBO_NUMERIC = ifelse(PRES_ALBO == "Presence", 1, 0)
+  ) %>%
+  filter(!is.na(NB_ALBO_TOT)) %>%
+  dplyr::filter(site != "RENNES")
+```
+
+Variables retenues par Paul (après CCM et colinéarité ) pour le modèle Présence/Absence
+
+```{r}
+predictors_presence <- c("TM_0_8", "UM_5_11")
+```
+
+```{r}
+df_model_presence <- df_model %>%
+  dplyr::select("site", "Year", "week",
+                "NB_ALBO_TOT", "PRES_ALBO",
+                all_of(predictors_presence))
+
+```
+
+Analyse des NA
+
+```{r}
+cat("Analyse NA\n")
+cat("Dimensions initiales :", nrow(df_model_presence), "lignes\n")
+
+na_count <- df_model_presence %>%
+  select(all_of(predictors_presence)) %>%
+  summarise(across(everything(), ~sum(is.na(.)))) %>%
+  pivot_longer(everything(), names_to = "variable", values_to = "n_NA")
+
+print(na_count)
+
+n_lignes_na <- df_model_presence %>%
+  select(all_of(predictors_presence)) %>%
+  apply(1, function(x) any(is.na(x))) %>%
+  sum()
+
+cat("\nLignes avec au moins 1 NA :", n_lignes_na)
+
+```
+
+Il n'y a pas de valaurs manquantes pour les variables explicatives TM_0_8 et UM_5_11.
+
+**Répartiton des données par site**
+
+```{r}
+df_model_presence %>%
+  mutate(has_na = apply(select(., all_of(predictors_presence)), 1,
+                        function(x) any(is.na(x)))) %>%
+  group_by(site) %>%
+  summarise(n_total = n()) %>%
+  print()
+```
+
+**RF**
+
+```{r}
+cv_col <- "site"
+
+#validation croisée par site(loso)
+
+indices_cv <- CAST::CreateSpacetimeFolds(
+  df_model_presence,
+  spacevar = cv_col,
+  k        = length(unique(df_model_presence$site))
+)
+
+tr <- trainControl(
+  method          = "cv",
+  index           = indices_cv$index,
+  indexOut        = indices_cv$indexOut,
+  summaryFunction = twoClassSummary,
+  classProbs      = TRUE,
+  savePredictions = "final",
+  verboseIter     = FALSE
+)
+
+cat("Entraînement du modèle RF\n")
+
+mod_presence <- caret::train(
+  x          = df_model_presence[, predictors_presence],
+  y          = df_model_presence$PRES_ALBO,
+  method     = "ranger",
+  tuneLength = 10,
+  trControl  = tr,
+  metric     = "ROC",
+  maximize   = TRUE,
+  preProcess = c("center", "scale"),
+  importance = "permutation"
+)
+
+
+```
+
+```{r}
+
+df_model_presence$rowIndex <- seq(1, nrow(df_model_presence), 1)
+df_cv_presence <- mod_presence$pred %>%
+  left_join(df_model_presence, by = "rowIndex") %>%
+  dplyr::select(pred, Presence, obs, site, week, Year, NB_ALBO_TOT) %>%
+  mutate(obs = ifelse(obs == "Absence", 0, 1)) %>%
+  dplyr::rename(pred_final = pred, pred = Presence)
+```
+
+Accuracy
+
+```{r}
+df_cv_presence %>%
+  mutate(pred_classe = ifelse(pred >= 0.5, 1, 0)) %>%
+  summarise(
+    accuracy = round(mean(pred_classe == obs), 3),
+    n        = n()
+  ) %>%
+  print()
+
+# Par site
+df_cv_presence %>%
+  mutate(pred_classe = ifelse(pred >= 0.5, 1, 0)) %>%
+  group_by(site) %>%
+  summarise(
+    accuracy = round(mean(pred_classe == obs), 3),
+    n        = n()
+  ) %>%
+  print()
+```
+
+188 --\> on a obtenu 188 moyennes, moyenne par site et par semaines.
+
+Ce modèle de présence/absence (évalué en validation croisée spatiale leave-one-site-out) obtient une accuracy globale de 88.8%.
+
+**Prédiction conforme**
+
+Résidus
+
+```{r}
+all_residuals<- df_cv_presence %>%
+  mutate(residual = pred - obs)
+
+sites <- unique(all_residuals$site)
+```
+
+Distribution des Résidus
+
+```{r}
+par(mfrow = c(2, ceiling((length(sites) + 1) / 2)))
+
+for (s in sites) {
+  res_s <- all_residuals %>% filter(site == s) %>% pull(residual)
+  qqnorm(res_s, main = paste("QQ-plot résidus —", s),
+         col = "steelblue", pch = 19, cex = 0.7)
+  qqline(res_s, col = "red", lwd = 2)
+}
+
+qqnorm(all_residuals$residual,
+       main = "QQ-plot résidus — Tous sites",
+       col  = "steelblue", pch = 19, cex = 0.6)
+qqline(all_residuals$residual, col = "red", lwd = 2)
+par(mfrow = c(1, 1))
+```
+
+Les résidus suivent approximativement la droite normale au centre ( donc il y a pas mal de prédictions correctes) mais s'en écartent aux extrêmes, ce qui est attendu pour un modèle de classification binaire.
+
+**Histogrammes et courbe normale**
+
+```{r}
+stats_site <- all_residuals %>%
+  group_by(site) %>%
+  summarise(mean_r = mean(residual), sd_r = sd(residual))
+
+#courbe normale pour chaque site
+courbe_normale <- stats_site %>%
+  rowwise() %>%
+  reframe(
+    site     = site,
+    x        = seq(-1, 1, length.out = 200),
+    y        = dnorm(seq(-1, 1, length.out = 200), mean = mean_r, sd = sd_r)
+  )
+
+ggplot(all_residuals, aes(x = residual)) +
+  geom_histogram(aes(y = after_stat(density)),
+                 bins = 30, fill = "steelblue",
+                 alpha = 0.7, color = "white") +
+  geom_line(data = courbe_normale, aes(x = x, y = y),
+            color = "red", linewidth = 1) +
+  facet_wrap(~site, ncol = 2) +
+  labs(title    = "Distribution des résidus par site",
+       subtitle = "Courbe rouge = loi normale de chaque site",
+       x = "Résidus")
+```
+
+On observe que pour chaque site, les résidus sont plus concentrés autour de 0, ce qui indique que le modèle est correct la plupart du temps. Cependant, quelques barres apparaissent aux extrêmes , correspondant aux semaines où le modèle s'est trompé. Aussi, la distribution réelle est bien plus "haute" que la loi normale , ce qui confirme que les résidus ne suivent pas une distribution gaussienne et qui jutsifie qu'on puisse utiliser la prédiction conforme pour corriger ce problème car la prediction conforme ne se base sur aucune hypothèse de distribution des résidus.( source : )
+
+Test de normalité des résidus
+
+```{r}
+set.seed(42)
+
+
+sw_global <- shapiro.test(sample(all_residuals$residual,
+                                 min(5000, nrow(all_residuals))))
+cat("\n[Tous les sites] W =", round(sw_global$statistic, 4),
+    "| p =", formatC(sw_global$p.value, format = "e", digits = 3))
+
+# Par site
+for (s in sites) {
+  res_s <- all_residuals %>% filter(site == s) %>% pull(residual)
+  sw_s  <- shapiro.test(res_s)
+  cat("\n[Site :", s, "] W =", round(sw_s$statistic, 4),
+      "| p =", formatC(sw_s$p.value, format = "e", digits = 3))
+}
+```
+
+On utilse le test de Shapiro qui va nous permettre de savoir si les residus suivent une loi normale ave une p-value (plus précis, si p\<0,05 –\>on rejette l'hypothèse de normalité des résidus). Ici, p\<0.01 pour tous les sites, donc on rejette bien l'hypothèse de normalité. Et, pour pérols, surtout, on a w= 0.54, ce qui signifie que la distriution s'éloigne beaucoup d'une loi normale.
+
+Prédiction conforme
+
+```{r}
+alpha <- 0.10
+
+cat("\nalpha =", alpha, "| Couverture cible =", (1 - alpha) * 100, "%\n")
+
+conformal_results <- map_dfr(sites, function(s) {
+  
+  # Calibration : toutes les observations SAUF le site test
+  calib <- df_cv_presence %>% filter(site != s)
+  test  <- df_cv_presence %>% filter(site == s)
+  
+  # Score de non-conformité = 1 - P(classe vraie)
+  nc_calib <- ifelse(calib$obs == 1,
+                     1 - calib$pred,
+                     calib$pred)
+  
+  q_hat <- quantile(nc_calib, probs = 1 - alpha)
+  
+  # Inclusion de chaque classe sur le test
+  nc_test_1 <- 1 - test$pred
+  nc_test_0 <- test$pred
+  
+  include_1 <- as.integer(nc_test_1 <= q_hat)
+  include_0 <- as.integer(nc_test_0 <= q_hat)
+  set_size  <- include_1 + include_0
+  covered   <- as.integer(ifelse(test$obs == 1, include_1, include_0))
+  
+  tibble(
+    site      = test$site,
+    y_obs     = test$obs,
+    prob_1    = test$pred,
+    include_0 = include_0,
+    include_1 = include_1,
+    set_size  = set_size,
+    covered   = covered,
+    q_hat     = q_hat
+  )
+})
+
+coverage_summary <- conformal_results %>%
+  group_by(site) %>%
+  summarise(n          = n(),
+            couverture = round(mean(covered), 3),
+            taille_moy = round(mean(set_size), 3),
+            .groups    = "drop")
+
+global_row <- tibble(
+  site       = "GLOBAL",
+  n          = nrow(conformal_results),
+  couverture = round(mean(conformal_results$covered), 3),
+  taille_moy = round(mean(conformal_results$set_size), 3)
+)
+
+coverage_summary
+```
+
+Ici, on a implémenter la prédiction conforme en s'appuyant toujours sur la validation croisée leave-one-site-out déjà utilisée.On voit dans le tableau coverage summary, pour Bayonne, par exmeple,dans 90.2% des cas la vraie classe (Présence ou Absence) était bien dans l'ensemble prédit par le modèle. Donc sur 41 semaines, le modèle s'est "trompé" (la vraie classe n'était pas dans l'ensemble) seulement 4 fois environ. Aussi, on atteint bien notre cible de 90% un peu près pour les 4 sites. De plus, pour Bayonne toujours,en moyenne,les ensembles de prédiction contiennent 1.024 classes. Cela siginfie que presque toutes les semaines le modèle prédit une seule classe avec certitude (présence ou absence), et seulement 2% des semaines où il dit "incertain" en incluant les deux classes. Donc le modèle est rarement incertain sur BAYONNE.
+
+```{r}
+ggplot(conformal_results, aes(x = factor(set_size), fill = site)) +
+  geom_bar(position = "dodge", alpha = 0.85) +
+  scale_fill_brewer(palette = "Set2") +
+  labs(title    = "Taille des ensembles de prédiction conformes",
+       subtitle = paste0("alpha = ", alpha,
+                         " | Couverture à= ", (1-alpha)*100, "%"),
+       x = "Taille du set  (0 = vide · 1 = certain · 2 = incertain)",
+       y = "Nombre d'observations", fill = "Site") +
+  theme_minimal()
+```
+
+NB: on peut faire varier alpha, si on le diminue par exemple, le modèle va prédire plus de semaines clasées "incertaines".
+
+Par exemple, avec alpha=0,05
+
+```{r}
+alpha <- 0.05
+
+conformal_results <- map_dfr(sites, function(s) {
+  calib <- df_cv_presence %>% filter(site != s)
+  test  <- df_cv_presence %>% filter(site == s)
+  nc_calib <- ifelse(calib$obs == 1, 1 - calib$pred, calib$pred)
+  q_hat <- quantile(nc_calib, probs = 1 - alpha)
+  nc_test_1 <- 1 - test$pred
+  nc_test_0 <- test$pred
+  include_1 <- as.integer(nc_test_1 <= q_hat)
+  include_0 <- as.integer(nc_test_0 <= q_hat)
+  set_size  <- include_1 + include_0
+  covered   <- as.integer(ifelse(test$obs == 1, include_1, include_0))
+  tibble(site=test$site, y_obs=test$obs, prob_1=test$pred,
+         include_0=include_0, include_1=include_1,
+         set_size=set_size, covered=covered, q_hat=q_hat)
+})
+
+ggplot(conformal_results, aes(x = factor(set_size), fill = site)) +
+  geom_bar(position = "dodge", alpha = 0.85) +
+  scale_fill_brewer(palette = "Set2") +
+  labs(title    = "Taille des ensembles de prédiction conformes",
+       subtitle = paste0("alpha = ", alpha,
+                         " | Couverture à= ", (1-alpha)*100, "%"),
+       x = "Taille du set  (0 = vide · 1 = certain · 2 = incertain)",
+       y = "Nombre d'observations", fill = "Site") +
+  theme_minimal()
+```
+
+On voit bien qui'l y a plus de prédictions "incertaines", le modèle est plus concervateur.
+
+On refais l'accuracy sur les prédictions certaines pour finir et on ajoute la sensibilté pour savoir quand le modèle a effectivement bien détecté la présence de moustiques, et la spécificité. (C'est toutjours alpha=0,05 ici)
+
+```{r}
+tableau_complet <- function(alpha_val) {
+  
+  conformal_tmp <- map_dfr(sites, function(s) {
+    calib <- df_cv_presence %>% filter(site != s)
+    test  <- df_cv_presence %>% filter(site == s)
+    nc_calib <- ifelse(calib$obs == 1, 1 - calib$pred, calib$pred)
+    q_hat <- quantile(nc_calib, probs = 1 - alpha_val)
+    nc_test_1 <- 1 - test$pred
+    nc_test_0 <- test$pred
+    include_1 <- as.integer(nc_test_1 <= q_hat)
+    include_0 <- as.integer(nc_test_0 <= q_hat)
+    set_size  <- include_1 + include_0
+    covered   <- as.integer(ifelse(test$obs == 1, include_1, include_0))
+    tibble(site=test$site, y_obs=test$obs, prob_1=test$pred,
+           include_0=include_0, include_1=include_1,
+           set_size=set_size, covered=covered, q_hat=q_hat)
+  })
+  
+  conformal_tmp %>%
+    filter(set_size == 1) %>%
+    mutate(pred_classe = include_1) %>%
+    group_by(site) %>%
+    summarise(
+      n_certain     = n(),
+      accuracy      = round(mean(pred_classe == y_obs), 3),
+      faux_negatifs = sum(pred_classe == 0 & y_obs == 1),
+      faux_positifs = sum(pred_classe == 1 & y_obs == 0),
+      .groups = "drop"
+    ) %>%
+    left_join(
+      conformal_tmp %>%
+        group_by(site) %>%
+        summarise(n_total = n(), .groups = "drop"),
+      by = "site"
+    ) %>%
+    mutate(pct_certain = round(n_certain / n_total * 100, 1),
+           alpha = alpha_val) %>%
+    dplyr::select(site, n_total, n_certain, pct_certain, 
+                  accuracy, faux_negatifs, faux_positifs)
+}
+
+cat("\nSans prédiction conforme")
+df_cv_presence %>%
+  mutate(pred_classe = ifelse(pred >= 0.5, 1, 0)) %>%
+  group_by(site) %>%
+  summarise(
+    n_total       = n(),
+    accuracy      = round(mean(pred_classe == obs), 3),
+    faux_negatifs = sum(pred_classe == 0 & obs == 1),
+    faux_positifs = sum(pred_classe == 1 & obs == 0),
+    .groups = "drop"
+  ) %>% print()
+
+cat("\nalpha = 0.10 (couverture 90%)")
+print(tableau_complet(0.10))
+
+cat("\nalpha = 0.05 (couverture 95%)")
+print(tableau_complet(0.05))
+```
+
+On voit que l'accuracy a augmenté pour tous les sites (même si c'est parfois léger, dans quelques années, avec un jeu de données plus large, les diffférence entre niveaux d'apha seront plus marquées peut-être).
+
+On voit aussi que, sans prédiction conforme, le modèle se trompait 2 fois, il disait "pas de moustiques" alors qu'il y en avait. Avec alpha = 0.10, ça ne change pas vraiment, le modèle est encore trop sûr de lui. Mais avec alpha = 0.05, ces 2 erreurs disparaissent, quand le modèle dit "Absence" il a vraiment raison. Mais d'un coté, 11 semaines se retrouvent en "incertain", ce qui veut dire qu'on pourrait faire un traitement de moustiques ou vérifier dircetement sur le terrain au lieu de se tromper.
+
+Valeurs des variables températures
+
+```{r}
+alpha <- 0.05
+
+conformal_results <- map_dfr(sites, function(s) {
+  calib <- df_cv_presence %>% filter(site != s)
+  test  <- df_cv_presence %>% filter(site == s)
+  nc_calib <- ifelse(calib$obs == 1, 1 - calib$pred, calib$pred)
+  q_hat <- quantile(nc_calib, probs = 1 - alpha)
+  nc_test_1 <- 1 - test$pred
+  nc_test_0 <- test$pred
+  include_1 <- as.integer(nc_test_1 <= q_hat)
+  include_0 <- as.integer(nc_test_0 <= q_hat)
+  set_size  <- include_1 + include_0
+  covered   <- as.integer(ifelse(test$obs == 1, include_1, include_0))
+  tibble(
+    site      = test$site,
+    week      = test$week,      # ← ajouté
+    Year      = test$Year,      # ← ajouté
+    y_obs     = test$obs,
+    prob_1    = test$pred,
+    include_0 = include_0,
+    include_1 = include_1,
+    set_size  = set_size,
+    covered   = covered,
+    q_hat     = q_hat
+  )
+})
+#tableau recap
+conformal_results %>%
+  mutate(categorie = case_when(
+    set_size == 2                  ~ "Incertain",
+    set_size == 1 & include_1 == 1 ~ "Prédit Présence",
+    set_size == 1 & include_0 == 1 ~ "Prédit Absence",
+    TRUE                           ~ "Vide"
+  )) %>%
+  left_join(df_model_presence %>% 
+              select(site, week, Year, TM_0_8, UM_5_11),
+            by = c("site", "week", "Year")) %>%
+  group_by(categorie) %>%
+  summarise(
+    n           = n(),
+    moy_TM_0_8  = round(mean(TM_0_8, na.rm = TRUE), 2),
+    min_TM_0_8  = round(min(TM_0_8,  na.rm = TRUE), 2),
+    max_TM_0_8  = round(max(TM_0_8,  na.rm = TRUE), 2),
+    moy_UM_5_11 = round(mean(UM_5_11, na.rm = TRUE), 2),
+    min_UM_5_11 = round(min(UM_5_11,  na.rm = TRUE), 2),
+    max_UM_5_11 = round(max(UM_5_11,  na.rm = TRUE), 2),
+    .groups = "drop"
+  ) %>%
+  print()
+```
+
+Les incertains ont une température moyenne de 13.7°C ,entre les absences (10.2°C) et les présences (18.7°C) , ce qui confirme bien que ce sont les semaines de transition (printemps/automne) où la température ne permet pas de trancher clairement. L'humidité (76.9%) est également entre les deux autres ensembles. Le modèle est donc incertain exactement aux bons moments. (Illustré en sessous)
+
+```{r}
+conformal_results %>%
+  filter(set_size == 2) %>%
+  left_join(df_cv_presence %>% 
+              select(site, week, Year, prob_1 = pred), 
+            by = c("site", "prob_1")) %>%
+  group_by(site, week) %>%
+  summarise(n_incertain = n(), .groups = "drop") %>%
+  ggplot(aes(x = week, y = n_incertain, fill = site)) +
+  geom_col(position = "dodge") +
+  scale_fill_brewer(palette = "Set2") +
+  labs(title = "Semaines d'incertitude par site",
+       x = "Semaine", y = "Nb observations incertaines") +
+  theme_minimal()
+```
